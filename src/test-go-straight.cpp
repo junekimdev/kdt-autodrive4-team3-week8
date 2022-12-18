@@ -8,6 +8,8 @@
 // Const
 constexpr std::string NODE_NAME = "test-driver";
 constexpr std::string XYCAR_MOTOR_TOPIC = "xycar_motor";
+constexpr int FREQ = 2;       // 2Hz
+constexpr int DURATION = 10;  // 10s
 constexpr int ANGLE = 0;
 constexpr int SPEED = 10;
 
@@ -39,11 +41,11 @@ int main(int argc, char** argv) {
   Driver driver;
   ROS_INFO("System is ONLINE");
 
-  // Freq
-  ros::Rate rate(2);  // 2Hz
+  // Set repeat freq
+  ros::Rate rate(FREQ);
 
-  // Driving for 10s
-  for (int i = 0; i < 20; i++) {
+  // Drive
+  for (int i = 0; i < FREQ * DURATION; i++) {
     ros::spinOnce();
     driver.drive(SPEED);
     rate.sleep();
