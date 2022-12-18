@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE launch>
+<launch>
+  <!-- motor -->
+  <include file="$(find xycar_motor)/launch/xycar_motor.launch"/>
+  
+  <!-- driver -->
+  <node name="test-driver" pkg="physics-test" type="go-straight" output="screen"/>
+</launch>
