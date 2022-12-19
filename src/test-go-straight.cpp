@@ -10,7 +10,7 @@ const std::string NODE_NAME = "mydriver";
 const std::string XYCAR_MOTOR_TOPIC = "xycar_motor";
 constexpr int FREQ = 2;       // 2Hz
 constexpr int DURATION = 10;  // 10s
-constexpr int ANGLE = 0;
+constexpr int ANGLE = 8;
 constexpr int SPEED = 10;
 
 class Driver {

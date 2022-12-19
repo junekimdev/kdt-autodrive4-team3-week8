@@ -10,12 +10,8 @@ const std::string NODE_NAME = "mydriver";
 const std::string XYCAR_MOTOR_TOPIC = "xycar_motor";
 constexpr int FREQ = 2;       // 2Hz
 constexpr int DURATION = 10;  // 10s
-constexpr int ANGLE = 0;
-constexpr int SPEED = 10;
-// constexpr int SPEED = 20;
-// constexpr int SPEED = 30;
-// constexpr int SPEED = 40;
-// constexpr int SPEED = 50;
+constexpr int ANGLE = 8;
+constexpr int SPEED = 5;
 
 class Driver {
   ros::NodeHandle node;
