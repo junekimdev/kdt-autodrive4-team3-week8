@@ -6,8 +6,8 @@
 #include "xycar_msgs/xycar_motor.h"
 
 // Const
-constexpr std::string NODE_NAME = "test-driver";
-constexpr std::string XYCAR_MOTOR_TOPIC = "xycar_motor";
+const std::string NODE_NAME = "mydriver";
+const std::string XYCAR_MOTOR_TOPIC = "xycar_motor";
 constexpr int FREQ = 2;       // 2Hz
 constexpr int DURATION = 10;  // 10s
 constexpr int ANGLE = 0;
@@ -27,7 +27,7 @@ public:
   }
 
   void drive(int angle);
-}
+};
 
 void Driver::drive(int speed) {
   xycar_msgs::xycar_motor msg;
