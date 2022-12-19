@@ -5,5 +5,5 @@
   <include file="$(find xycar_motor)/launch/xycar_motor.launch"/>
   
   <!-- driver -->
-  <node name="mydriver" pkg="physics" type="physics" output="screen"/>
+  <node name="mydriver" pkg="test-physics" type="test-physics" output="screen"/>
 </launch>
