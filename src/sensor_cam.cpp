@@ -95,12 +95,8 @@ int main(int argc, char** argv) {
   Sensor sensor;
   ROS_INFO(NODE_NAME + " is ONLINE");
 
-  // Set repeat freq
-  ros::Rate rate(FREQ);
-
   while (ros::ok()) {
     ros::spinOnce();
-    rate.sleep();
 
     // for debugging
     cv::imshow(WINDOW_TITLE, this->myImg);
