@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE launch>
+<launch>
+  <!-- motor -->
+  <include file="$(find xycar_motor)/launch/xycar_motor.launch"/>
+
+  <!-- Team3 includes -->
+  <!-- Cam -->
+  <include file="$(find sensor_cam)/launch/sensor_cam.launch"/>
+  <!-- Lidar -->
+  <!-- <include file="$(find sensor_lidar)/launch/sensor_lidar.launch"/> -->
+  <!-- Sonic -->
+  <!-- <include file="$(find sensor_sonic)/launch/sensor_sonic.launch"/> -->
+  <!-- IMU -->
+  <!-- <include file="$(find sensor_imu)/launch/sensor_imu.launch"/> -->
+  <!-- controller -->
+  <node name="team3-controller" pkg="team3-controller" type="team3-controller" output="screen"/>
+</launch>
