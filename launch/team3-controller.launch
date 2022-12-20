@@ -14,5 +14,5 @@
   <!-- IMU -->
   <!-- <include file="$(find sensor_imu)/launch/sensor_imu.launch"/> -->
   <!-- controller -->
-  <node name="team3-controller" pkg="team3-controller" type="team3-controller" output="screen"/>
+  <node name="team3_controller" pkg="team3-controller" type="team3-controller" output="screen"/>
 </launch>
