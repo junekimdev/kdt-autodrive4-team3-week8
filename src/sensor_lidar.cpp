@@ -10,7 +10,7 @@
 // Const
 const std::string NODE_NAME = "sensor_lidar";
 const std::string SUB_TOPIC = "scan";
-const std::string PUB_TOPIC = "sensor_lidar";
+const std::string PUB_TOPIC = "sensor_data";
 
 class Sensor {
   ros::NodeHandle node;
