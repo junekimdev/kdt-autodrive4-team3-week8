@@ -40,23 +40,23 @@ class Sensor {
 
 public:
   Sensor() : isLeftDetected(false), isRightDetected(false), lpos(0), rpos(0) {
-    sub = node.subscribe(SUB_TOPIC, 1, &Sensor::imageCallback, this);
+    sub = node.subscribe(SUB_TOPIC, 1, &Sensor::callback, this);
     pub = node.advertise<sensor_cam::cam_msg>(PUB_TOPIC, 1);
     cv::namedWindow(WINDOW_TITLE);
   }
 
-  void imageCallback(const sensor_msgs::ImageConstPtr& msg);
+  void callback(const sensor_msgs::ImageConstPtr& msg);
   void processImg();
   void publish();
 };
 
-void Sensor::imageCallback(const sensor_msgs::ImageConstPtr& msg) {
+void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
   try {
     this->myImg = cv::Mat(HEIGHT, WIDTH, CV_8UC3,
-                          const_cast<uchar*>(&msg->data), msg->step);
+                          const_cast<uchar*>(&msg->data[0]), msg->step);
     this->processImg();
   } catch (const std::exception& e) {
-    ROS_ERROR("imageCallback exception: %s", e.what());
+    ROS_ERROR("callback exception: %s", e.what());
     return;
   }
 }
@@ -65,6 +65,7 @@ void Sensor::processImg() {
   // TODO:
   cv::line(this->myImg, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
            BLUE, 1);
+  cv::imshow(WINDOW_TITLE, this->myImg);
 }
 
 void Sensor::publish() {
@@ -81,21 +82,20 @@ void Sensor::publish() {
   msg.rpos = this->rpos;
 
   this->pub.publish(msg);
-  ROS_INFO("lpos: " + lpos + " | rpos: " + rpos);
+  ROS_INFO("lpos: %d | rpos: %d", lpos, rpos);
 }
 
 int main(int argc, char** argv) {
   // Init
   ros::init(argc, argv, NODE_NAME);
   Sensor sensor;
-  ROS_INFO(NODE_NAME + " is ONLINE");
+  ROS_INFO("%s is ONLINE", NODE_NAME.c_str());
 
   while (ros::ok()) {
     ros::spinOnce();
 
     // for debugging
-    cv::imshow(WINDOW_TITLE, this->myImg);
-    int k = cv::wait_key(1);
+    int k = cv::waitKey(1);
     if (k == ESC_KEY || k == ' ') break;
   }
 
