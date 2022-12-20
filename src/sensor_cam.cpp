@@ -25,6 +25,46 @@ constexpr int ESC_KEY = 27;
 constexpr int WIDTH = 640;
 constexpr int HEIGHT = 480;
 constexpr int SCAN_ROW = 400;
+constexpr double GAUSIAN_BLUR_SIGMA = 2.;
+constexpr int ROI_HEIGHT = 20;
+constexpr int ROI_Y = SCAN_ROW - (ROI_HEIGHT / 2);
+
+inline std::vector<int> filterX(const std::vector<cv::Point>& pts,
+                                const int minV, const int maxV,
+                                const bool isLeft = true) {
+  int lp = pts[0].x, rp = pts[1].x;
+
+  // Offset rightside
+  if (!isLeft) {
+    lp += minV;
+    rp += minV;
+  }
+
+  int distance = rp - lp;
+  if (distance < 1) {
+    lp = isLeft ? minV : maxV;
+    rp = isLeft ? minV : maxV;
+  }
+
+  return {lp, rp};
+}
+
+inline std::vector<cv::Point> findEdges(const cv::Mat& img,
+                                        const bool isLeft = true) {
+  cv::Mat img32, blr, dx;
+  img.convertTo(img32, CV_32F);
+  cv::GaussianBlur(img32, blr, cv::Size(), GAUSIAN_BLUR_SIGMA);
+  cv::Sobel(blr, dx, CV_32F, 1, 0);
+
+  double leftsideV, rightsideV;
+  cv::Point leftsidePt, rightsidePt;
+
+  int centerY = ROI_HEIGHT / 2;   // horizontal center line
+  cv::Mat roi = dx.row(centerY);  // Line scanning
+  cv::minMaxLoc(roi, &leftsideV, &rightsideV, &leftsidePt, &rightsidePt);
+
+  return {leftsidePt, rightsidePt};
+}
 
 class Sensor {
   ros::NodeHandle node;
@@ -61,6 +101,41 @@ void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
 
 void Sensor::processImg() {
   // TODO:
+  int roi_width = this->vFrame.cols / 2;
+
+  // Convert to Gray
+  cv::Mat grayFrame;
+  cv::cvtColor(this->vFrame, grayFrame, cv::COLOR_BGR2GRAY);
+
+  // Find lanes
+  cv::Rect roiRectL(0, ROI_Y, roi_width - 1, ROI_HEIGHT);          // left half
+  cv::Rect roiRectR(roi_width, ROI_Y, roi_width - 1, ROI_HEIGHT);  // right half
+  cv::Mat roiL = grayFrame(roiRectL);
+  cv::Mat roiR = grayFrame(roiRectR);
+  std::vector<cv::Point> ptsL = findEdges(roiL);
+  std::vector<cv::Point> ptsR = findEdges(roiR, false);
+  std::vector<int> pxL = filterX(ptsL, 0, roi_width);
+  std::vector<int> pxR = filterX(ptsR, roi_width, this->vFrame.cols - 1, false);
+  int left = cvRound((pxL[0] + pxL[1]) / 2.f);
+  int right = cvRound((pxR[0] + pxR[1]) / 2.f);
+  if (left != 0) {
+    this->isLeftDetected = true;
+    this->lpos = left;
+  }
+  if (right != this->vFrame.cols - 1) {
+    this->isRightDetected = true;
+    this->rpos = right;
+  }
+
+  // for debugging
+  cv::drawMarker(this->vFrame, cv::Point(pxL[0], SCAN_ROW), YELLOW,
+                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  cv::drawMarker(this->vFrame, cv::Point(pxL[1], SCAN_ROW), BLUE,
+                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  cv::drawMarker(this->vFrame, cv::Point(pxR[0], SCAN_ROW), YELLOW,
+                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  cv::drawMarker(this->vFrame, cv::Point(pxR[1], SCAN_ROW), BLUE,
+                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
   cv::line(this->vFrame, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
            BLUE, 1);
   cv::imshow(WINDOW_TITLE, this->vFrame);
