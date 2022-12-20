@@ -7,6 +7,11 @@ Repo of Week8 competition for Team3 of 4th KDT Autonomous Driving Dev-Course
 - ROS1 Melodic Morenia
 - Xycar modules
 
+## S/W Architecture
+
+- ROS nodes & topics
+  ![Architecture Image](absolute_departure.svg)
+
 ## User Guides
 
 1. Clone this repo
