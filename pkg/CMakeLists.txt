@@ -6,12 +6,13 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   message_generation
+  message_runtime
 )
 
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  cam_msg.msg
+  lidar_msg.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
