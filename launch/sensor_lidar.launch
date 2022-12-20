@@ -5,5 +5,5 @@
   <include file="$(find xycar_lidar)/launch/lidar_noviewer.launch"/>
 
   <!-- processor -->
-  <node name="sensor_lidar" package="sensor_lidar" type="sensor_lidar" output="screen"/>
+  <node name="sensor_lidar" pkg="sensor_lidar" type="sensor_lidar" output="screen"/>
 </launch>
