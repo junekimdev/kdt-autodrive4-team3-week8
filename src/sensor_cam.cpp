@@ -25,14 +25,12 @@ constexpr int ESC_KEY = 27;
 constexpr int WIDTH = 640;
 constexpr int HEIGHT = 480;
 constexpr int SCAN_ROW = 400;
-// constexpr int ROI_TOP = 420;
-// constexpr int ROI_HEIGHT = 20;
 
 class Sensor {
   ros::NodeHandle node;
   ros::Subscriber sub;
   ros::Publisher pub;
-  cv::Mat myImg;
+  cv::Mat vFrame;
   bool isLeftDetected;
   bool isRightDetected;
   int lpos;
@@ -52,8 +50,8 @@ public:
 
 void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
   try {
-    this->myImg = cv::Mat(HEIGHT, WIDTH, CV_8UC3,
-                          const_cast<uchar*>(&msg->data[0]), msg->step);
+    this->vFrame = cv::Mat(HEIGHT, WIDTH, CV_8UC3,
+                           const_cast<uchar*>(&msg->data[0]), msg->step);
     this->processImg();
   } catch (const std::exception& e) {
     ROS_ERROR("callback exception: %s", e.what());
@@ -63,9 +61,10 @@ void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
 
 void Sensor::processImg() {
   // TODO:
-  cv::line(this->myImg, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
+  cv::line(this->vFrame, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
            BLUE, 1);
-  cv::imshow(WINDOW_TITLE, this->myImg);
+  cv::imshow(WINDOW_TITLE, this->vFrame);
+  this->publish();
 }
 
 void Sensor::publish() {
