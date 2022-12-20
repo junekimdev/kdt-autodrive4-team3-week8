@@ -39,12 +39,7 @@ class Sensor {
   int rpos;
 
 public:
-  Sensor()
-      : isReady(false),
-        isLeftDetected(false),
-        isRightDetected(false),
-        lpos(0),
-        rpos(0) {
+  Sensor() : isLeftDetected(false), isRightDetected(false), lpos(0), rpos(0) {
     sub = node.subscribe(SUB_TOPIC, 1, &Sensor::imageCallback, this);
     pub = node.advertise<sensor_cam::cam_msg>(PUB_TOPIC, 1);
     cv::namedWindow(WINDOW_TITLE);
