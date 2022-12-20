@@ -80,7 +80,7 @@ public:
   Sensor() : isLeftDetected(false), isRightDetected(false), lpos(0), rpos(0) {
     sub = node.subscribe(SUB_TOPIC, 1, &Sensor::callback, this);
     pub = node.advertise<sensor_cam::cam_msg>(PUB_TOPIC, 1);
-    cv::namedWindow(WINDOW_TITLE);
+    // cv::namedWindow(WINDOW_TITLE);
   }
 
   void callback(const sensor_msgs::ImageConstPtr& msg);
@@ -128,17 +128,17 @@ void Sensor::processImg() {
   }
 
   // for debugging
-  cv::drawMarker(this->vFrame, cv::Point(pxL[0], SCAN_ROW), YELLOW,
-                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
-  cv::drawMarker(this->vFrame, cv::Point(pxL[1], SCAN_ROW), BLUE,
-                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
-  cv::drawMarker(this->vFrame, cv::Point(pxR[0], SCAN_ROW), YELLOW,
-                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
-  cv::drawMarker(this->vFrame, cv::Point(pxR[1], SCAN_ROW), BLUE,
-                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
-  cv::line(this->vFrame, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
-           BLUE, 1);
-  cv::imshow(WINDOW_TITLE, this->vFrame);
+  // cv::drawMarker(this->vFrame, cv::Point(pxL[0], SCAN_ROW), YELLOW,
+  //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  // cv::drawMarker(this->vFrame, cv::Point(pxL[1], SCAN_ROW), BLUE,
+  //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  // cv::drawMarker(this->vFrame, cv::Point(pxR[0], SCAN_ROW), YELLOW,
+  //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  // cv::drawMarker(this->vFrame, cv::Point(pxR[1], SCAN_ROW), BLUE,
+  //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  // cv::line(this->vFrame, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
+  //          BLUE, 1);
+  // cv::imshow(WINDOW_TITLE, this->vFrame);
   this->publish();
 }
 
@@ -156,7 +156,7 @@ void Sensor::publish() {
   msg.rpos = this->rpos;
 
   this->pub.publish(msg);
-  ROS_INFO("lpos: %d | rpos: %d", lpos, rpos);
+  // ROS_INFO("lpos: %d | rpos: %d", lpos, rpos);
 }
 
 int main(int argc, char** argv) {
@@ -169,8 +169,8 @@ int main(int argc, char** argv) {
     ros::spinOnce();
 
     // for debugging
-    int k = cv::waitKey(1);
-    if (k == ESC_KEY || k == ' ') break;
+    // int k = cv::waitKey(1);
+    // if (k == ESC_KEY || k == ' ') break;
   }
 
   cv::destroyAllWindows();
