@@ -13,7 +13,7 @@
 const std::string NODE_NAME = "sensor_cam";
 const std::string WINDOW_TITLE = "Camera";
 const std::string SUB_TOPIC = "usb_cam/image_raw";
-const std::string PUB_TOPIC = "sensor_data";
+const std::string PUB_TOPIC = "cam_data";
 const cv::Scalar WHITE = cv::Scalar(255, 255, 255);
 const cv::Scalar BLACK = cv::Scalar(0, 0, 0);
 const cv::Scalar RED = cv::Scalar(0, 0, 255);
