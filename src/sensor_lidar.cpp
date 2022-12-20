@@ -32,7 +32,7 @@ public:
 void Sensor::callback(const sensor_msgs::LaserScanConstPtr& msg) {
   try {
     // TODO:
-    msg->ranges;
+    // msg->ranges;
     this->processData();
   } catch (const std::exception& e) {
     ROS_ERROR("Lidar callback exception: %s", e.what());
@@ -52,14 +52,14 @@ void Sensor::publish() {
   msg.object_distances = &this->objects[0];
 
   this->pub.publish(msg);
-  ROS_INFO("Lidar detected objects: " + this->objects.size());
+  ROS_INFO("Lidar detected objects: %d", this->objects.size());
 }
 
 int main(int argc, char** argv) {
   // Init
   ros::init(argc, argv, NODE_NAME);
   Sensor sensor;
-  ROS_INFO(NODE_NAME + " is ONLINE");
+  ROS_INFO("%s is ONLINE", NODE_NAME.c_str());
 
   while (ros::ok()) {
     ros::spinOnce();
