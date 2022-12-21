@@ -24,11 +24,11 @@ const cv::Scalar YELLOW = cv::Scalar(0, 255, 255);
 constexpr int ESC_KEY = 27;
 constexpr int WIDTH = 640;
 constexpr int HEIGHT = 480;
-constexpr int SCAN_ROW = 360;
+constexpr int SCAN_ROW = 380;
 constexpr double GAUSIAN_BLUR_SIGMA = 2.;
-constexpr int ROI_HEIGHT = 40;
+constexpr int ROI_HEIGHT = 30;
 constexpr int ROI_Y = SCAN_ROW - (ROI_HEIGHT / 2);
-constexpr int ROI_GAP = 10;
+constexpr int ROI_GAP = 8;
 
 inline std::vector<int> filterX(const std::vector<cv::Point>& pts,
                                 const int minV, const int maxV,
