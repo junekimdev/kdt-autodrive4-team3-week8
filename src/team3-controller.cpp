@@ -22,7 +22,7 @@ const std::string SUB_TOPIC_CAM = "cam_data";
 // const std::string SUB_TOPIC_SONIC = "SONIC_data";
 // const std::string SUB_TOPIC_IMU = "imu_data";
 const std::string PUB_TOPIC = "xycar_motor";
-constexpr int FREQ = 2;  // 2Hz
+constexpr int FREQ = 140;  // Hz
 
 class Controller {
   ros::NodeHandle node;
@@ -86,7 +86,7 @@ void Controller::control() {
   DRIVE_MODE mode =
       (std::abs(angle) < 5) ? DRIVE_MODE::GO_SLOW : DRIVE_MODE::TURN_SLOW;
   int speed =
-      mode == DRIVE_MODE::GO_SLOW || mode == DRIVE_MODE::TURN_SLOW ? 10 : 30;
+      mode == DRIVE_MODE::GO_SLOW || mode == DRIVE_MODE::TURN_SLOW ? 5 : 30;
 
   if (this->controlState.isStarted) {
     ROS_INFO("Angle: %d | Speed: %d", angle, speed);
