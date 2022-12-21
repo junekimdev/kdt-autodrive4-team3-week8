@@ -17,7 +17,7 @@ constexpr int MAX_ANGLE = 50;
 constexpr int MIN_ANGLE = -50;
 constexpr int MAX_SPEED = 30;
 constexpr int WIDTH = 640;
-constexpr int SMA_NUM = 3;
+constexpr int SMA_NUM = 10;
 
 enum struct DRIVE_MODE { STOP, GO_SLOW, GO_FAST, TURN_SLOW };
 
