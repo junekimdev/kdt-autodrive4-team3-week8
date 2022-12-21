@@ -25,6 +25,7 @@ const std::string SUB_TOPIC_CAM = "cam_data";
 // const std::string SUB_TOPIC_IMU = "imu_data";
 const std::string PUB_TOPIC = "xycar_motor";
 constexpr int FREQ = 140;  // Hz
+constexpr float ANGLE_DIV = 2.f;
 
 // std::chrono::system_clock::time_point t1, t2;
 
@@ -90,7 +91,8 @@ void Controller::control() {
   float laneCenter =
       (this->sensorState.lposSMA + this->sensorState.rposSMA) / 2.f;
   // ROS_INFO("laneCenter: %.3f", laneCenter);
-  int angle = (int)((laneCenter - viewCenter) / 3.f + .5f);  // Round half up
+  int angle =
+      (int)((laneCenter - viewCenter) / ANGLE_DIV + .5f);  // Round half up
   angle = this->correctAngle(angle);
   DRIVE_MODE mode =
       (std::abs(angle) < 5) ? DRIVE_MODE::GO_SLOW : DRIVE_MODE::TURN_SLOW;
