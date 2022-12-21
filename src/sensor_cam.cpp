@@ -52,20 +52,26 @@ inline std::vector<int> filterX(const std::vector<cv::Point>& pts,
 
 inline std::vector<cv::Point> findEdges(const cv::Mat& img,
                                         const bool isLeft = true) {
-  cv::Mat img32, blr, dx;
+  cv::Mat img32, blr, dx, dy, dst;
   img.convertTo(img32, CV_32F);
   cv::GaussianBlur(img32, blr, cv::Size(), GAUSIAN_BLUR_SIGMA);
   cv::Sobel(blr, dx, CV_32F, 1, 0);
+  cv::Sobel(blr, dy, CV_32F, 0, 1);
+  dst = dx.mul(dx) + dy.mul(dy);
+  cv::sqrt(dst, dst);
+
+  // for debugging
+  cv::imshow("ROI", dst);
 
   double leftsideV1, rightsideV1, leftsideV2, rightsideV2, leftsideV3,
       rightsideV3;
   cv::Point leftsidePt1, rightsidePt1, leftsidePt2, rightsidePt2, leftsidePt3,
       rightsidePt3;
 
-  int centerY = ROI_HEIGHT / 2;              // horizontal center line
-  cv::Mat roi1 = dx.row(centerY);            // Line scanning
-  cv::Mat roi2 = dx.row(centerY + ROI_GAP);  // Line scanning
-  cv::Mat roi3 = dx.row(centerY - ROI_GAP);  // Line scanning
+  int centerY = ROI_HEIGHT / 2;               // horizontal center line
+  cv::Mat roi1 = dst.row(centerY);            // Line scanning
+  cv::Mat roi2 = dst.row(centerY + ROI_GAP);  // Line scanning
+  cv::Mat roi3 = dst.row(centerY - ROI_GAP);  // Line scanning
   cv::minMaxLoc(roi1, &leftsideV1, &rightsideV1, &leftsidePt1, &rightsidePt1);
   cv::minMaxLoc(roi2, &leftsideV2, &rightsideV2, &leftsidePt2, &rightsidePt2);
   cv::minMaxLoc(roi3, &leftsideV3, &rightsideV3, &leftsidePt3, &rightsidePt3);
