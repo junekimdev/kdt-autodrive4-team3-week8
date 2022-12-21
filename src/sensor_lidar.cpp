@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -25,22 +26,22 @@ public:
   }
 
   void callback(const sensor_msgs::LaserScan::ConstPtr& msg);
-  void processData();
+  void process();
   void publish();
 };
 
-void Sensor::callback(const sensor_msgs::LaserScanConstPtr& msg) {
+void Sensor::callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
   try {
     // TODO:
-    // msg->ranges;
-    this->processData();
+    std::cout << (msg->ranges) << '\n';
+    this->process();
   } catch (const std::exception& e) {
     ROS_ERROR("Lidar callback exception: %s", e.what());
     return;
   }
 }
 
-void Sensor::processData() {
+void Sensor::process() {
   // TODO:
 }
 
