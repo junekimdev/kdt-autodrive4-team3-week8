@@ -89,7 +89,7 @@ void Controller::control() {
       mode == DRIVE_MODE::GO_SLOW || mode == DRIVE_MODE::TURN_SLOW ? 5 : 30;
 
   if (this->controlState.isStarted) {
-    ROS_INFO("Angle: %d | Speed: %d", angle, speed);
+    // ROS_INFO("Angle: %d | Speed: %d", angle, speed);
     this->controlState.reduce(mode, angle, speed);
     this->pub.publish(this->createMsg());
   }
@@ -104,13 +104,13 @@ int main(int argc, char** argv) {
   ROS_INFO("%s is ONLINE", NODE_NAME.c_str());
 
   // Set repeat freq
-  ros::Rate rate(FREQ);
+  // ros::Rate rate(FREQ);
 
   controller.start();
   while (ros::ok()) {
     ros::spinOnce();
     // controller.control();
-    rate.sleep();
+    // rate.sleep();
   }
 
   return 0;
