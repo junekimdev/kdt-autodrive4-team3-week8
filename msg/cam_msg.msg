@@ -6,3 +6,5 @@ bool isLeftDetected
 bool isRightDetected
 int32 lpos
 int32 rpos
+int32 lposFar
+int32 rposFar
