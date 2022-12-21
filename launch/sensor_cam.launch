@@ -6,4 +6,5 @@
 
   <!-- processor -->
   <node name="sensor_cam" pkg="sensor_cam" type="sensor_cam" output="screen"/>
+  <node name="sensor_cam_hough" pkg="sensor_cam" type="sensor_cam_hough" output="screen"/>
 </launch>
