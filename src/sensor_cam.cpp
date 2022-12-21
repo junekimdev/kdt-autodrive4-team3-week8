@@ -57,12 +57,24 @@ inline std::vector<cv::Point> findEdges(const cv::Mat& img,
   cv::GaussianBlur(img32, blr, cv::Size(), GAUSIAN_BLUR_SIGMA);
   cv::Sobel(blr, dx, CV_32F, 1, 0);
 
-  double leftsideV, rightsideV;
-  cv::Point leftsidePt, rightsidePt;
+  double leftsideV1, rightsideV1, leftsideV2, rightsideV2, leftsideV3,
+      rightsideV3;
+  cv::Point leftsidePt1, rightsidePt1, leftsidePt2, rightsidePt2, leftsidePt3,
+      rightsidePt3;
 
-  int centerY = ROI_HEIGHT / 2;   // horizontal center line
-  cv::Mat roi = dx.row(centerY);  // Line scanning
-  cv::minMaxLoc(roi, &leftsideV, &rightsideV, &leftsidePt, &rightsidePt);
+  int centerY = ROI_HEIGHT / 2;        // horizontal center line
+  cv::Mat roi1 = dx.row(centerY);      // Line scanning
+  cv::Mat roi2 = dx.row(centerY + 5);  // Line scanning
+  cv::Mat roi3 = dx.row(centerY - 5);  // Line scanning
+  cv::minMaxLoc(roi, &leftsideV1, &rightsideV1, &leftsidePt1, &rightsidePt1);
+  cv::minMaxLoc(roi, &leftsideV2, &rightsideV2, &leftsidePt2, &rightsidePt2);
+  cv::minMaxLoc(roi, &leftsideV3, &rightsideV3, &leftsidePt3, &rightsidePt3);
+
+  cv::Point leftsidePt, rightsidePt;
+  leftsidePt.x =
+      (int)((leftsidePt1.x + leftsidePt2.x + leftsidePt3.x) / 3.f + .5f);
+  rightsidePt.x =
+      (int)((rightsidePt1.x + rightsidePt2.x + rightsidePt3.x) / 3.f + .5f);
 
   return {leftsidePt, rightsidePt};
 }
