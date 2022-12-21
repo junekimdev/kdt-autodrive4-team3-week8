@@ -97,7 +97,7 @@ public:
   }
 
   void callback(const sensor_msgs::ImageConstPtr& msg);
-  void processImg();
+  void process();
   void publish();
 };
 
@@ -107,7 +107,7 @@ void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
                            const_cast<uchar*>(&msg->data[0]), msg->step);
     // cv::TickMeter tm;
     // tm.start();
-    this->processImg();
+    this->process();
     // tm.stop();
     // std::cout << "Elapsed time: " << tm.getTimeMilli() << "ms." << '\n';
   } catch (const std::exception& e) {
@@ -116,7 +116,7 @@ void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
   }
 }
 
-void Sensor::processImg() {
+void Sensor::process() {
   // TODO:
   int roi_width = this->vFrame.cols / 2;
 
