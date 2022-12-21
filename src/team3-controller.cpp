@@ -1,4 +1,4 @@
-#include <chrono>
+// #include <chrono>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -26,7 +26,7 @@ const std::string SUB_TOPIC_CAM = "cam_data";
 const std::string PUB_TOPIC = "xycar_motor";
 constexpr int FREQ = 140;  // Hz
 
-std::chrono::system_clock::time_point t1, t2;
+// std::chrono::system_clock::time_point t1, t2;
 
 class Controller {
   ros::NodeHandle node;
@@ -72,10 +72,10 @@ public:
 void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
   this->sensorState.reduceCamState(msg);
   this->control();
-  t2 = std::chrono::system_clock::now();
-  std::chrono::nanoseconds dt = t2 - t1;
-  std::cout << "time: " << dt.count() << '\n';
-  std::swap(t1, t2);
+  // t2 = std::chrono::system_clock::now();
+  // std::chrono::nanoseconds dt = t2 - t1;
+  // std::cout << "time: " << dt.count() << '\n';
+  // std::swap(t1, t2);
 }
 
 // void Controller::callbackLidar(const sensor_lidar::lidar_msg::ConstPtr& msg)
@@ -87,7 +87,8 @@ void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
 void Controller::control() {
   // Decide angle
   float viewCenter = this->sensorState.width / 2.f;
-  float laneCenter = (this->sensorState.lpos + this->sensorState.rpos) / 2.f;
+  float laneCenter =
+      (this->sensorState.lposSMA + this->sensorState.rposSMA) / 2.f;
   // ROS_INFO("laneCenter: %.3f", laneCenter);
   int angle = (int)((laneCenter - viewCenter) / 3.f + .5f);  // Round half up
   angle = this->correctAngle(angle);
@@ -115,7 +116,7 @@ int main(int argc, char** argv) {
   // ros::Rate rate(FREQ);
 
   controller.start();
-  t1 = std::chrono::system_clock::now();
+  // t1 = std::chrono::system_clock::now();
   while (ros::ok()) {
     ros::spinOnce();
     // controller.control();
