@@ -7,7 +7,6 @@
 #include "sensor_msgs/Image.h"
 
 // Include OpenCV
-#include "opencv2/core/ocl.hpp"
 #include "opencv2/opencv.hpp"
 
 // Const
@@ -25,10 +24,11 @@ const cv::Scalar YELLOW = cv::Scalar(0, 255, 255);
 constexpr int ESC_KEY = 27;
 constexpr int WIDTH = 640;
 constexpr int HEIGHT = 480;
-constexpr int SCAN_ROW = 400;
+constexpr int SCAN_ROW = 360;
 constexpr double GAUSIAN_BLUR_SIGMA = 2.;
-constexpr int ROI_HEIGHT = 20;
+constexpr int ROI_HEIGHT = 40;
 constexpr int ROI_Y = SCAN_ROW - (ROI_HEIGHT / 2);
+constexpr int ROI_GAP = 10;
 
 inline std::vector<int> filterX(const std::vector<cv::Point>& pts,
                                 const int minV, const int maxV,
@@ -62,13 +62,13 @@ inline std::vector<cv::Point> findEdges(const cv::Mat& img,
   cv::Point leftsidePt1, rightsidePt1, leftsidePt2, rightsidePt2, leftsidePt3,
       rightsidePt3;
 
-  int centerY = ROI_HEIGHT / 2;        // horizontal center line
-  cv::Mat roi1 = dx.row(centerY);      // Line scanning
-  cv::Mat roi2 = dx.row(centerY + 5);  // Line scanning
-  cv::Mat roi3 = dx.row(centerY - 5);  // Line scanning
-  cv::minMaxLoc(roi, &leftsideV1, &rightsideV1, &leftsidePt1, &rightsidePt1);
-  cv::minMaxLoc(roi, &leftsideV2, &rightsideV2, &leftsidePt2, &rightsidePt2);
-  cv::minMaxLoc(roi, &leftsideV3, &rightsideV3, &leftsidePt3, &rightsidePt3);
+  int centerY = ROI_HEIGHT / 2;              // horizontal center line
+  cv::Mat roi1 = dx.row(centerY);            // Line scanning
+  cv::Mat roi2 = dx.row(centerY + ROI_GAP);  // Line scanning
+  cv::Mat roi3 = dx.row(centerY - ROI_GAP);  // Line scanning
+  cv::minMaxLoc(roi1, &leftsideV1, &rightsideV1, &leftsidePt1, &rightsidePt1);
+  cv::minMaxLoc(roi2, &leftsideV2, &rightsideV2, &leftsidePt2, &rightsidePt2);
+  cv::minMaxLoc(roi3, &leftsideV3, &rightsideV3, &leftsidePt3, &rightsidePt3);
 
   cv::Point leftsidePt, rightsidePt;
   leftsidePt.x =
@@ -93,7 +93,7 @@ public:
   Sensor() : isLeftDetected(false), isRightDetected(false), lpos(0), rpos(0) {
     sub = node.subscribe(SUB_TOPIC, 1, &Sensor::callback, this);
     pub = node.advertise<sensor_cam::cam_msg>(PUB_TOPIC, 1);
-    // cv::namedWindow(WINDOW_TITLE);
+    cv::namedWindow(WINDOW_TITLE);
   }
 
   void callback(const sensor_msgs::ImageConstPtr& msg);
@@ -135,11 +135,13 @@ void Sensor::processImg() {
   std::vector<int> pxR = filterX(ptsR, roi_width, this->vFrame.cols - 1, false);
   int left = cvRound((pxL[0] + pxL[1]) / 2.f);
   int right = cvRound((pxR[0] + pxR[1]) / 2.f);
-  if (left != 0) {
+
+  // When undetected, lpos & rpos will be kept as previous values
+  if (pxL[0] != 0 && pxL[1] != 0) {
     this->isLeftDetected = true;
     this->lpos = left;
   }
-  if (right != this->vFrame.cols - 1) {
+  if (pxR[0] != this->vFrame.cols - 1 && pxR[1] != this->vFrame.cols - 1) {
     this->isRightDetected = true;
     this->rpos = right;
   }
@@ -153,9 +155,13 @@ void Sensor::processImg() {
   //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
   // cv::drawMarker(this->vFrame, cv::Point(pxR[1], SCAN_ROW), BLUE,
   //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
-  // cv::line(this->vFrame, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
-  //          BLUE, 1);
-  // cv::imshow(WINDOW_TITLE, this->vFrame);
+  cv::line(this->vFrame, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
+           BLUE, 1);
+  cv::line(this->vFrame, cv::Point(0, SCAN_ROW + ROI_GAP),
+           cv::Point(WIDTH, SCAN_ROW + ROI_GAP), BLUE, 1);
+  cv::line(this->vFrame, cv::Point(0, SCAN_ROW - ROI_GAP),
+           cv::Point(WIDTH, SCAN_ROW - ROI_GAP), BLUE, 1);
+  cv::imshow(WINDOW_TITLE, this->vFrame);
   this->publish();
 }
 
@@ -178,7 +184,6 @@ void Sensor::publish() {
 
 int main(int argc, char** argv) {
   // Init
-  cv::ocl::setUseOpenCL(false);  // for ORB time check
   ros::init(argc, argv, NODE_NAME);
   Sensor sensor;
   ROS_INFO("%s is ONLINE", NODE_NAME.c_str());
@@ -187,8 +192,8 @@ int main(int argc, char** argv) {
     ros::spinOnce();
 
     // for debugging
-    // int k = cv::waitKey(1);
-    // if (k == ESC_KEY || k == ' ') break;
+    int k = cv::waitKey(1);
+    if (k == ESC_KEY || k == ' ') break;
   }
 
   cv::destroyAllWindows();
