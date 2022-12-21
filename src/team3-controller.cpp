@@ -1,4 +1,6 @@
+#include <chrono>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,6 +25,8 @@ const std::string SUB_TOPIC_CAM = "cam_data";
 // const std::string SUB_TOPIC_IMU = "imu_data";
 const std::string PUB_TOPIC = "xycar_motor";
 constexpr int FREQ = 140;  // Hz
+
+std::chrono::system_clock::time_point t1, t2;
 
 class Controller {
   ros::NodeHandle node;
@@ -68,6 +72,10 @@ public:
 void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
   this->sensorState.reduceCamState(msg);
   this->control();
+  t2 = std::chrono::system_clock::now();
+  std::chrono::nanoseconds dt = t2 - t1;
+  std::cout << "time: " << dt.count() << '\n';
+  std::swap(t1, t2);
 }
 
 // void Controller::callbackLidar(const sensor_lidar::lidar_msg::ConstPtr& msg)
@@ -107,6 +115,7 @@ int main(int argc, char** argv) {
   // ros::Rate rate(FREQ);
 
   controller.start();
+  t1 = std::chrono::system_clock::now();
   while (ros::ok()) {
     ros::spinOnce();
     // controller.control();
