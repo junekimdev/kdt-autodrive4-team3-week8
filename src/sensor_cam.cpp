@@ -7,6 +7,7 @@
 #include "sensor_msgs/Image.h"
 
 // Include OpenCV
+#include "opencv2/core/ocl.hpp"
 #include "opencv2/opencv.hpp"
 
 // Const
@@ -92,7 +93,11 @@ void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
   try {
     this->vFrame = cv::Mat(HEIGHT, WIDTH, CV_8UC3,
                            const_cast<uchar*>(&msg->data[0]), msg->step);
+    // cv::TickMeter tm;
+    // tm.start();
     this->processImg();
+    // tm.stop();
+    // std::cout << "Elapsed time: " << tm.getTimeMilli() << "ms." << '\n';
   } catch (const std::exception& e) {
     ROS_ERROR("callback exception: %s", e.what());
     return;
@@ -161,6 +166,7 @@ void Sensor::publish() {
 
 int main(int argc, char** argv) {
   // Init
+  cv::ocl::setUseOpenCL(false);  // for ORB time check
   ros::init(argc, argv, NODE_NAME);
   Sensor sensor;
   ROS_INFO("%s is ONLINE", NODE_NAME.c_str());
