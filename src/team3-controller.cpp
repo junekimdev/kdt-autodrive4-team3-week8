@@ -14,7 +14,6 @@
 
 // Include States
 #include "team3-controller/ControlState.h"
-#include "team3-controller/SensorState.h"
 
 // Const
 const std::string NODE_NAME = "controller";
@@ -31,25 +30,33 @@ class Controller {
   // ros::Subscriber sub_lidar;
   // ros::Subscriber sub_sonic;
   // ros::Subscriber sub_imu;
-  SensorState& sensorState;
-  ControlState& controlState;
+  ros::Publisher pub;
+  SensorState sensorState;
+  ControlState controlState;
 
-  void correctAngle() {
-    this->controlState.angle += ANGLE_CENTER;
-    if (this->controlState.angle > MAX_ANGLE)
-      this->controlState.angle = MAX_ANGLE;
-    if (this->controlState.angle < MIN_ANGLE)
-      this->controlState.angle = MIN_ANGLE;
+  int correctAngle(int angle) {
+    angle += ANGLE_CENTER;
+    if (angle > MAX_ANGLE) angle = MAX_ANGLE;
+    if (angle < MIN_ANGLE) angle = MIN_ANGLE;
+    return angle;
   }
 
 public:
-  Controller() : sensorState(SensorState()) {
+  Controller() {
     this->sub_cam =
         this->node.subscribe(SUB_TOPIC_CAM, 1, &Controller::callbackCam, this);
     // this->sub_lidar = node.subscribe(SUB_TOPIC_LIDAR, 1,
     // &Controller::callbackLidar, this);
-    this->controlState = ControlState(
-        this->node.advertise<xycar_msgs::xycar_motor>(PUB_TOPIC, 1));
+    this->pub = this->node.advertise<xycar_msgs::xycar_motor>(PUB_TOPIC, 1);
+  }
+
+  xycar_msgs::xycar_motor createMsg() {
+    xycar_msgs::xycar_motor msg;
+    msg.header.stamp = ros::Time::now();
+    msg.header.frame_id = CONTROLLER_NAME;
+    msg.angle = this->controlState.angle;
+    msg.speed = this->controlState.speed;
+    return msg;
   }
 
   void callbackCam(const sensor_cam::cam_msg::ConstPtr& msg);
@@ -71,15 +78,21 @@ void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
 // TODO:
 void Controller::control() {
   // Decide angle
-  float viewCenter = sensorState.width / 2.f;
-  float laneCenter = (sensorState.lposSMA + sensorState.rposSMA) / 2.f;
+  float viewCenter = this->sensorState.width / 2.f;
+  float laneCenter = (this->sensorState.lpos + this->sensorState.rpos) / 2.f;
+  // ROS_INFO("laneCenter: %.3f", laneCenter);
   int angle = (int)((laneCenter - viewCenter) / 3.f + .5f);  // Round half up
-  angle = correctAngle(angle);
-  DRIVE_MODE mode = (std::abs(angle) < 5) DRIVE.GO_SLOW : DRIVE.TURN_SLOW;
-  int speed = mode == DRIVE.GO_SLOW || mode == DRIVE.TURN_SLOW ? 10 : 30;
+  angle = this->correctAngle(angle);
+  DRIVE_MODE mode =
+      (std::abs(angle) < 5) ? DRIVE_MODE::GO_SLOW : DRIVE_MODE::TURN_SLOW;
+  int speed =
+      mode == DRIVE_MODE::GO_SLOW || mode == DRIVE_MODE::TURN_SLOW ? 10 : 30;
 
-  if (this->controlState.isStarted)
+  if (this->controlState.isStarted) {
+    ROS_INFO("Angle: %d | Speed: %d", angle, speed);
     this->controlState.reduce(mode, angle, speed);
+    this->pub.publish(this->createMsg());
+  }
 }
 
 void Controller::start() { this->controlState.isStarted = true; }
@@ -96,6 +109,7 @@ int main(int argc, char** argv) {
   controller.start();
   while (ros::ok()) {
     ros::spinOnce();
+    // controller.control();
     rate.sleep();
   }
 
