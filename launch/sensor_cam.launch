@@ -5,6 +5,5 @@
   <include file="$(find usb_cam)/launch/usb_cam-noviewer.launch"/>
 
   <!-- processor -->
-  <node name="sensor_cam" pkg="sensor_cam" type="sensor_cam" output="screen"/>
-  <node name="sensor_cam_hough" pkg="sensor_cam" type="sensor_cam_hough" output="screen"/>
+  <node name="sensor_cam_hough" pkg="sensor_cam_hough" type="sensor_cam_hough" output="screen"/>
 </launch>

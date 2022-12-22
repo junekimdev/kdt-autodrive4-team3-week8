@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
   <version>0.0.0</version>
-  <name>sensor_cam</name>
-  <description>sensor_cam</description>
+  <name>sensor_cam_hough</name>
+  <description>sensor_cam_hough</description>
   <maintainer email="team3@todo.todo">team3</maintainer>
   <license>UNLICENSED</license>
 
