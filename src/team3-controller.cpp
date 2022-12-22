@@ -103,15 +103,14 @@ void Controller::control() {
   // Cam
   float cposViewCam = this->sensorState.cam.width / 2.f;
   float cposViewHough = this->sensorState.hough.width / 2.f;
-  float cposCam =
-      (this->sensorState.cam.lpos + this->sensorState.cam.rpos) / 2.f;
-  float cposHough =
-      (this->sensorState.hough.lpos + this->sensorState.hough.rpos) / 2.f;
   // float cposCam =
-  //     (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
+  //     (this->sensorState.cam.lpos + this->sensorState.cam.rpos) / 2.f;
   // float cposHough =
-  //     (this->sensorState.hough.lposSMA + this->sensorState.hough.rposSMA)
-  //     / 2.f;
+  //     (this->sensorState.hough.lpos + this->sensorState.hough.rpos) / 2.f;
+  float cposCam =
+      (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
+  float cposHough =
+      (this->sensorState.hough.lposSMA + this->sensorState.hough.rposSMA) / 2.f;
   // this->controlState.kalmanCam.estimate(cposCam);
   // this->controlState.kalmanHough.estimate(cposHough);
   // float camErr = this->controlState.kalmanCam.PhatSqrt;
