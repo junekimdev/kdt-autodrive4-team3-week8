@@ -6,7 +6,9 @@
 
   <!-- Team3 includes -->
   <!-- Cam -->
-  <include file="$(find sensor_cam)/launch/sensor_cam.launch"/>
+  <!-- <include file="$(find sensor_cam)/launch/sensor_cam.launch"/> -->
+  <!-- Cam_hough -->
+  <include file="$(find sensor_cam_hough)/launch/sensor_cam_hough.launch"/>
   <!-- Lidar -->
   <!-- <include file="$(find sensor_lidar)/launch/sensor_lidar.launch"/> -->
   <!-- Sonic -->
