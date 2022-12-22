@@ -30,8 +30,12 @@ constexpr int ROI_HEIGHT = 30;
 constexpr int ROI_Y = SCAN_ROW - (ROI_HEIGHT >> 1);
 constexpr int ROI_GAP = 8;
 
+const cv::Size ROI_SIZE_FULL = cv::Size(WIDTH, ROI_HEIGHT);
 const cv::Size ROI_SIZE_WIDE = cv::Size(WIDTH >> 1, ROI_HEIGHT);
 const cv::Size ROI_SIZE_NORM = cv::Size(WIDTH >> 2, ROI_HEIGHT);
+const cv::Rect ROI_FULL = cv::Rect(0, ROI_Y, WIDTH, ROI_HEIGHT);
+const cv::Rect ROI_L_NULL = cv::Rect(0, ROI_Y, 1, ROI_HEIGHT);
+const cv::Rect ROI_R_NULL = cv::Rect(WIDTH - 1, ROI_Y, 1, ROI_HEIGHT);
 const cv::Rect ROI_L_INIT = cv::Rect(cv::Point(0, ROI_Y), ROI_SIZE_WIDE);
 const cv::Rect ROI_R_INIT =
     cv::Rect(cv::Point(WIDTH >> 1, ROI_Y), ROI_SIZE_WIDE);
@@ -158,48 +162,65 @@ void Sensor::process() {
   cv::Mat grayFrame;
   cv::cvtColor(this->vFrame, grayFrame, cv::COLOR_BGR2GRAY);
 
-  // Find lanes
+  // Find lines
   cv::Mat roiL = grayFrame(this->roiRectL);
   cv::Mat roiR = grayFrame(this->roiRectR);
   std::vector<cv::Point> ptsL = findEdges(roiL);
   std::vector<cv::Point> ptsR = findEdges(roiR);
   std::vector<int> pxL = filterX(ptsL, this->roiRectL.x, 0);
   std::vector<int> pxR = filterX(ptsR, this->roiRectR.x, WIDTH - 1);
-  this->isLeftDetected = pxL[0] != pxL[1];
-  this->isRightDetected = pxR[0] != pxR[1];
 
   int left = cvRound((pxL[0] + pxL[1]) / 2.f);
   int right = cvRound((pxR[0] + pxR[1]) / 2.f);
-  this->lpos = left;
-  this->rpos = right;
 
   // Update roi for next
   // When undetected, lpos & rpos will be kept as previous values
-  if (this->isLeftDetected && this->isRightDetected) {
+  bool goodL = pxL[0] != pxL[1];
+  bool goodR = pxR[0] != pxR[1];
+  if (goodL && goodR) {
     // None lost
+    this->lpos = left;
+    this->rpos = right;
+
     int lx = left - (ROI_SIZE_NORM.width >> 1);
     int rx = right + (ROI_SIZE_NORM.width >> 1);
     this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width);
     this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width);
-  } else if (this->isLeftDetected) {
+
+  } else if (goodL) {
+    // Right line lost
+    this->lpos = left;
+
     int lx = left - (ROI_SIZE_NORM.width >> 1);
-    this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width);
-    // Right lane lost
     int rx = right + (ROI_SIZE_WIDE.width >> 1);
+    this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width);
     this->roiRectR =
         getRoiRectR(rx, ROI_SIZE_WIDE.width, this->roiRectL.br().x);
-  } else if (this->isRightDetected) {
+
+  } else if (goodR) {
+    // Left line lost
+    this->rpos = right;
+
     int rx = right + (ROI_SIZE_NORM.width >> 1);
-    this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width);
-    // Left lane lost
     int lx = left - (ROI_SIZE_WIDE.width >> 1);
+    this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width);
     this->roiRectL =
         getRoiRectL(lx, ROI_SIZE_WIDE.width, this->roiRectR.tl().x);
+
   } else {
-    // All lost; initiate ROI
-    this->roiRectL = ROI_L_INIT;
-    this->roiRectR = ROI_R_INIT;
+    // All lost
+    if (this->isLeftDetected) {
+      // Stand by to find L line
+      this->roiRectL = ROI_FULL;
+      this->roiRectR = ROI_R_NULL;
+    } else if (this->isRightDetected) {
+      // Stand by to find R line
+      this->roiRectL = ROI_L_NULL;
+      this->roiRectR = ROI_FULL;
+    }
   }
+  this->isLeftDetected = goodL;
+  this->isRightDetected = goodR;
 
   // for debugging
   cv::rectangle(this->vFrame, this->roiRectL, WHITE, 1);
@@ -212,6 +233,10 @@ void Sensor::process() {
   //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
   // cv::drawMarker(this->vFrame, cv::Point(pxR[1], SCAN_ROW), BLUE,
   //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  cv::drawMarker(this->vFrame, cv::Point(this->lpos, SCAN_ROW), YELLOW,
+                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  cv::drawMarker(this->vFrame, cv::Point(this->rpos, SCAN_ROW), BLUE,
+                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
   cv::line(this->vFrame, cv::Point(0, SCAN_ROW), cv::Point(WIDTH, SCAN_ROW),
            BLUE, 1);
   cv::line(this->vFrame, cv::Point(0, SCAN_ROW + ROI_GAP),
