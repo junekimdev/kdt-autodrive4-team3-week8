@@ -162,8 +162,15 @@ void Sensor::process() {
   cv::Canny(blurred, edged, CANNY_LOW_THRESHOLD, CANNY_HIGH_THRESHOLD,
             CANNY_KERNEL_SIZE);
 
+  // ROI
+  cv::Mat triangleMask = cv::Mat::zeros(HEIGHT, WIDTH, CV_8UC1);
+  std::vector<cv::Point> pts{cv::Point(WIDTH >> 1, HEIGHT >> 1),
+                             cv::Point(0, HEIGHT), cv::Point(WIDTH, HEIGHT)};
+  cv::fillPoly(triangleMask, pts, WHITE, cv::LINE_AA);
+  cv::Mat roi = cv::Mat::zeros(HEIGHT, WIDTH, CV_8UC1);
+  edged.copyTo(roi, triangleMask);
+
   // Hough TF
-  cv::Mat roi = edged(ROI_RECT);
   std::vector<cv::Vec4i> lines;
   cv::HoughLinesP(roi, lines, HOUGH_RHO, HOUGH_THETA, HOUGH_THRESHOLD,
                   HOUGH_MIN_LINE_LEN, HOUGH_MAX_LINE_GAP);
