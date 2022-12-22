@@ -164,9 +164,11 @@ void Sensor::process() {
 
   // ROI
   cv::Mat triangleMask = cv::Mat::zeros(HEIGHT, WIDTH, CV_8UC1);
-  std::vector<cv::Point> pts{cv::Point(WIDTH >> 1, HEIGHT >> 1),
-                             cv::Point(0, HEIGHT), cv::Point(WIDTH, HEIGHT)};
-  cv::fillPoly(triangleMask, pts, WHITE, cv::LINE_AA);
+  std::vector<cv::Point> roiPts{
+      cv::Point(WIDTH >> 1, HEIGHT >> 1), cv::Point(0, ROI_Y),
+      cv::Point(0, ROI_Y + ROI_HEIGHT), cv::Point(WIDTH, ROI_Y + ROI_HEIGHT),
+      cv::Point(WIDTH, ROI_Y)};
+  cv::fillPoly(triangleMask, roiPts, WHITE, cv::LINE_AA);
   cv::Mat roi = cv::Mat::zeros(HEIGHT, WIDTH, CV_8UC1);
   edged.copyTo(roi, triangleMask);
 
@@ -191,7 +193,7 @@ void Sensor::process() {
   // Lane extensions
   cv::line(this->vFrame, lp[0], lp[1], BLUE, 1, cv::LINE_AA);
   cv::line(this->vFrame, rp[0], rp[1], BLUE, 1, cv::LINE_AA);
-  cv::rectangle(this->vFrame, ROI_RECT, BLUE, 1);
+  cv::polylines(this->vFrame, roiPts, true, RED, 1, cv::LINE_AA);
   cv::imshow(WINDOW_TITLE, this->vFrame);
   this->publish();
 }
