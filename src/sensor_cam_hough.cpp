@@ -40,7 +40,7 @@ constexpr int LINE_SLOPE_LOW = 0;
 constexpr int LINE_SLOPE_HIGH = 10;
 constexpr int CENTER_GAP = 90;
 constexpr int ROI_HEIGHT = 40;
-constexpr int ROI_Y = 360;
+constexpr int ROI_Y = 340;
 
 const cv::Rect ROI_RECT = cv::Rect(0, ROI_Y, WIDTH, ROI_HEIGHT);
 
