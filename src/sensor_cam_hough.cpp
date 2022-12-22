@@ -71,7 +71,7 @@ public:
         rposFar(WIDTH - 1) {
     sub = node.subscribe(SUB_TOPIC, 1, &Sensor::callback, this);
     pub = node.advertise<sensor_cam_hough::cam_msg>(PUB_TOPIC, 1);
-    cv::namedWindow(WINDOW_TITLE);
+    // cv::namedWindow(WINDOW_TITLE);
   }
 
   void callback(const sensor_msgs::ImageConstPtr& msg);
@@ -182,10 +182,10 @@ void Sensor::process() {
 
   // for debugging
   // Lane extensions
-  cv::line(this->vFrame, lp[0], lp[1], BLUE, 1, cv::LINE_AA);
-  cv::line(this->vFrame, rp[0], rp[1], BLUE, 1, cv::LINE_AA);
-  cv::rectangle(this->vFrame, ROI_RECT, BLUE, 1);
-  cv::imshow(WINDOW_TITLE, this->vFrame);
+  // cv::line(this->vFrame, lp[0], lp[1], BLUE, 1, cv::LINE_AA);
+  // cv::line(this->vFrame, rp[0], rp[1], BLUE, 1, cv::LINE_AA);
+  // cv::rectangle(this->vFrame, ROI_RECT, BLUE, 1);
+  // cv::imshow(WINDOW_TITLE, this->vFrame);
   this->publish();
 }
 
@@ -217,8 +217,8 @@ int main(int argc, char** argv) {
     ros::spinOnce();
 
     // for debugging
-    int k = cv::waitKey(1);
-    if (k == ESC_KEY || k == ' ') break;
+    // int k = cv::waitKey(1);
+    // if (k == ESC_KEY || k == ' ') break;
   }
 
   cv::destroyAllWindows();
