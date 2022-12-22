@@ -170,6 +170,8 @@ void Sensor::process() {
 
   int left = cvRound((pxL[0] + pxL[1]) / 2.f);
   int right = cvRound((pxR[0] + pxR[1]) / 2.f);
+  this->lpos = left;
+  this->rpos = right;
 
   // Update roi for next
   // When undetected, lpos & rpos will be kept as previous values
@@ -177,8 +179,8 @@ void Sensor::process() {
   bool goodR = pxR[0] != pxR[1];
   if (goodL && goodR) {
     // None lost
-    this->lpos = left;
-    this->rpos = right;
+    // this->lpos = left;
+    // this->rpos = right;
 
     int lx = left - (ROI_SIZE_NORM.width >> 1);
     int rx = right + (ROI_SIZE_NORM.width >> 1);
@@ -188,7 +190,7 @@ void Sensor::process() {
 
   } else if (goodL) {
     // Right line lost
-    this->lpos = left;
+    // this->lpos = left;
 
     int lx = left - (ROI_SIZE_NORM.width >> 1);
     int rx = right + (ROI_SIZE_WIDE.width >> 1);
@@ -199,7 +201,7 @@ void Sensor::process() {
 
   } else if (goodR) {
     // Left line lost
-    this->rpos = right;
+    // this->rpos = right;
 
     int lx = left - (ROI_SIZE_WIDE.width >> 1);
     int rx = right + (ROI_SIZE_NORM.width >> 1);
