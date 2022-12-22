@@ -25,5 +25,9 @@
   <build_export_depend>sensor_cam</build_export_depend>
   <exec_depend>sensor_cam</exec_depend>
 
+  <build_depend>sensor_cam_hough</build_depend>
+  <build_export_depend>sensor_cam_hough</build_export_depend>
+  <exec_depend>sensor_cam_hough</exec_depend>
+
   <export></export>
 </package>

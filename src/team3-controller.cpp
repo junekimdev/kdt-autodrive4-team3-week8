@@ -9,6 +9,7 @@
 #include "ros/console.h"
 #include "ros/ros.h"
 #include "sensor_cam/cam_msg.h"
+#include "sensor_cam_hough/cam_msg.h"
 // #include "sensor_lidar/lidar_msg.h"
 // #include "sensor_sonic/sonic_msg.h"
 // #include "sensor_imu/imu_msg.h"
@@ -65,13 +66,24 @@ public:
   }
 
   void callbackCam(const sensor_cam::cam_msg::ConstPtr& msg);
+  void callbackCamHough(const sensor_cam_hough::cam_msg::ConstPtr& msg);
   // void callbackLidar(const sensor_lidar::lidar_msg::ConstPtr& msg);
   void control();
   void start();
 };
 
 void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
-  this->sensorState.reduceCamState(msg);
+  this->sensorState.cam.reduce(msg);
+  this->control();
+  // t2 = std::chrono::system_clock::now();
+  // std::chrono::nanoseconds dt = t2 - t1;
+  // std::cout << "time: " << dt.count() << '\n';
+  // std::swap(t1, t2);
+}
+
+void Controller::callbackCamHough(
+    const sensor_cam_hough::cam_msg::ConstPtr& msg) {
+  this->sensorState.hough.reduce(msg);
   this->control();
   // t2 = std::chrono::system_clock::now();
   // std::chrono::nanoseconds dt = t2 - t1;
@@ -86,10 +98,11 @@ void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
 
 // TODO:
 void Controller::control() {
+#if 0
   // Decide angle
-  float viewCenter = this->sensorState.width / 2.f;
+  float viewCenter = this->sensorState.cam.width / 2.f;
   float laneCenter =
-      (this->sensorState.lposSMA + this->sensorState.rposSMA) / 2.f;
+      (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
   // ROS_INFO("laneCenter: %.3f", laneCenter);
   int angle =
       (int)((laneCenter - viewCenter) / ANGLE_DIV + .5f);  // Round half up
@@ -98,6 +111,22 @@ void Controller::control() {
       (std::abs(angle) < 5) ? DRIVE_MODE::GO_SLOW : DRIVE_MODE::TURN_SLOW;
   int speed =
       mode == DRIVE_MODE::GO_SLOW || mode == DRIVE_MODE::TURN_SLOW ? 5 : 30;
+
+#else
+  // Decide angle
+  float viewCenter = this->sensorState.hough.width / 2.f;
+  float laneCenter =
+      (this->sensorState.hough.lposSMA + this->sensorState.hough.rposSMA) / 2.f;
+  // ROS_INFO("laneCenter: %.3f", laneCenter);
+  int angle =
+      (int)((laneCenter - viewCenter) / ANGLE_DIV + .5f);  // Round half up
+  angle = this->correctAngle(angle);
+  DRIVE_MODE mode =
+      (std::abs(angle) < 5) ? DRIVE_MODE::GO_SLOW : DRIVE_MODE::TURN_SLOW;
+  int speed =
+      mode == DRIVE_MODE::GO_SLOW || mode == DRIVE_MODE::TURN_SLOW ? 5 : 30;
+
+#endif
 
   if (this->controlState.isStarted) {
     // ROS_INFO("Angle: %d | Speed: %d", angle, speed);
