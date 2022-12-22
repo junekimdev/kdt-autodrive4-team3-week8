@@ -78,7 +78,6 @@ public:
 
 void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
   this->sensorState.cam.reduce(msg);
-  this->control();
   // t2 = std::chrono::system_clock::now();
   // std::chrono::nanoseconds dt = t2 - t1;
   // std::cout << "time: " << dt.count() << '\n';
@@ -88,7 +87,6 @@ void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
 void Controller::callbackCamHough(
     const sensor_cam_hough::cam_msg::ConstPtr& msg) {
   this->sensorState.hough.reduce(msg);
-  this->control();
   // t2 = std::chrono::system_clock::now();
   // std::chrono::nanoseconds dt = t2 - t1;
   // std::cout << "time: " << dt.count() << '\n';
@@ -150,7 +148,7 @@ int main(int argc, char** argv) {
   // t1 = std::chrono::system_clock::now();
   while (ros::ok()) {
     ros::spinOnce();
-    // controller.control();
+    controller.control();
     // rate.sleep();
   }
 
