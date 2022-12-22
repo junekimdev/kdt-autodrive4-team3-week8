@@ -27,6 +27,7 @@ const std::string SUB_TOPIC_CAM_HOUGH = "cam_hough_data";
 // const std::string SUB_TOPIC_IMU = "imu_data";
 const std::string PUB_TOPIC = "xycar_motor";
 constexpr int FREQ = 140;  // Hz
+constexpr int MAX_SPEED = 15;
 constexpr float ANGLE_DIV = 2.f;
 
 // std::chrono::system_clock::time_point t1, t2;
@@ -98,7 +99,6 @@ void Controller::callbackCamHough(
 //   ROS_INFO("CON:: %d", msg->size)
 // }
 
-// TODO:
 void Controller::control() {
   // Cam
   float cposViewCam = this->sensorState.cam.width / 2.f;
@@ -109,22 +109,26 @@ void Controller::control() {
       (this->sensorState.hough.lpos + this->sensorState.hough.rpos) / 2.f;
   // float cposCam =
   //     (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
-  // HoughTF
   // float cposHough =
   //     (this->sensorState.hough.lposSMA + this->sensorState.hough.rposSMA)
   //     / 2.f;
-  this->controlState.kalmanCam.estimate(cposCam);
-  this->controlState.kalmanHough.estimate(cposHough);
-  float camErr = this->controlState.kalmanCam.PhatSqrt;
-  float houghErr = this->controlState.kalmanHough.PhatSqrt;
+  // this->controlState.kalmanCam.estimate(cposCam);
+  // this->controlState.kalmanHough.estimate(cposHough);
+  // float camErr = this->controlState.kalmanCam.PhatSqrt;
+  // float houghErr = this->controlState.kalmanHough.PhatSqrt;
+  // ROS_INFO("camK: %.3f | houghK: %.3f", this->controlState.kalmanCam.K,
+  //          this->controlState.kalmanHough.K);
 
   // Compare two kalmans
   int angle, speed;
-  float cposView = (camErr > houghErr) ? cposViewHough : cposViewCam;
-  float cpos = (camErr > houghErr) ? cposHough : cposCam;
-  angle = (int)((cpos - cposView) / ANGLE_DIV + .5f);  // Round half up
+  // float cposView = (camErr > houghErr) ? cposViewHough : cposViewCam;
+  // float cpos = (camErr > houghErr) ? cposHough : cposCam;
+  // angle = (int)((cpos - cposView) / ANGLE_DIV + .5f);  // Round half up
+  angle = (int)((cposCam - cposViewCam) / ANGLE_DIV + .5f);
   angle = this->correctAngle(angle);
-  speed = (int)(MAX_SPEED - (std::abs(angle) / 2.f) + .5f);
+  // speed = (int)(MAX_SPEED - (std::abs(angle) / 2.f) + .5f);
+  // speed = (std::abs(angle - ANGLE_CENTER) < 10) ? 10 : 5;
+  speed = 5;
   DRIVE_MODE mode = DRIVE_MODE::GO;
 
   if (this->controlState.isStarted) {

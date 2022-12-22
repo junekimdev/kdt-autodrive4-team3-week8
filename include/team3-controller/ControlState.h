@@ -17,7 +17,6 @@ const std::string CONTROLLER_NAME = "controller";
 constexpr int ANGLE_CENTER = 8;
 constexpr int MAX_ANGLE = 50;
 constexpr int MIN_ANGLE = -50;
-constexpr int MAX_SPEED = 30;
 constexpr int WIDTH = 640;
 constexpr int SMA_NUM = 10;
 
@@ -37,9 +36,9 @@ struct Kalman1D {
   Kalman1D(float Q, float R, float Xest, float Phat)
       : Q(Q),
         R(R),
-        P(.0f),
-        S(.0f),
-        K(.0f),
+        P(.5f),
+        S(.5f),
+        K(.5f),
         Xest(Xest),
         Xmeasured(.0f),
         Phat(Phat),
