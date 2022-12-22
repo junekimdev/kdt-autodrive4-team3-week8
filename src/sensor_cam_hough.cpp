@@ -27,7 +27,7 @@ const cv::Scalar YELLOW = cv::Scalar(0, 255, 255);
 constexpr int ESC_KEY = 27;
 constexpr int WIDTH = 640;
 constexpr int HEIGHT = 480;
-constexpr double GAUSIAN_BLUR_SIGMA = 2.;
+constexpr double GAUSIAN_BLUR_SIGMA = 1.;
 constexpr int CANNY_LOW_THRESHOLD = 60;
 constexpr int CANNY_HIGH_THRESHOLD = 70;
 constexpr int CANNY_KERNEL_SIZE = 3;
@@ -71,7 +71,7 @@ public:
         rposFar(WIDTH - 1) {
     sub = node.subscribe(SUB_TOPIC, 1, &Sensor::callback, this);
     pub = node.advertise<sensor_cam_hough::cam_msg>(PUB_TOPIC, 1);
-    // cv::namedWindow(WINDOW_TITLE);
+    cv::namedWindow(WINDOW_TITLE);
   }
 
   void callback(const sensor_msgs::ImageConstPtr& msg);
@@ -164,6 +164,7 @@ void Sensor::process() {
 
   // Hough TF
   cv::Mat roi = edged(ROI_RECT);
+  cv::imshow("roi", roi);
   std::vector<cv::Vec4i> lines;
   cv::HoughLinesP(roi, lines, HOUGH_RHO, HOUGH_THETA, HOUGH_THRESHOLD,
                   HOUGH_MIN_LINE_LEN, HOUGH_MAX_LINE_GAP);
@@ -182,10 +183,10 @@ void Sensor::process() {
 
   // for debugging
   // Lane extensions
-  // cv::line(this->vFrame, lp[0], lp[1], BLUE, 1, cv::LINE_AA);
-  // cv::line(this->vFrame, rp[0], rp[1], BLUE, 1, cv::LINE_AA);
-  // cv::rectangle(this->vFrame, ROI_RECT, BLUE, 1);
-  // cv::imshow(WINDOW_TITLE, this->vFrame);
+  cv::line(this->vFrame, lp[0], lp[1], YELLOW, 1, cv::LINE_AA);
+  cv::line(this->vFrame, rp[0], rp[1], RED, 1, cv::LINE_AA);
+  cv::rectangle(this->vFrame, ROI_RECT, BLUE, 1);
+  cv::imshow(WINDOW_TITLE, this->vFrame);
   this->publish();
 }
 
@@ -217,8 +218,8 @@ int main(int argc, char** argv) {
     ros::spinOnce();
 
     // for debugging
-    // int k = cv::waitKey(1);
-    // if (k == ESC_KEY || k == ' ') break;
+    int k = cv::waitKey(1);
+    if (k == ESC_KEY || k == ' ') break;
   }
 
   cv::destroyAllWindows();
