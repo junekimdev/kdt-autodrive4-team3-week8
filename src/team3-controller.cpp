@@ -29,6 +29,7 @@ const std::string PUB_TOPIC = "xycar_motor";
 constexpr int FREQ = 140;  // Hz
 constexpr int MAX_SPEED = 15;
 constexpr float ANGLE_DIV = 2.f;
+constexpr float HOUGH_ANGLE_PX_DIFF = 20;
 
 // std::chrono::system_clock::time_point t1, t2;
 
@@ -109,8 +110,8 @@ void Controller::control() {
   //     (this->sensorState.hough.lpos + this->sensorState.hough.rpos) / 2.f;
   float cposCam =
       (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
-  float cposHough =
-      (this->sensorState.hough.lposSMA + this->sensorState.hough.rposSMA) / 2.f;
+  float cposHoughFar =
+      (this->sensorState.hough.lposFar + this->sensorState.hough.rposFar) / 2.f;
   // this->controlState.kalmanCam.estimate(cposCam);
   // this->controlState.kalmanHough.estimate(cposHough);
   // float camErr = this->controlState.kalmanCam.PhatSqrt;
@@ -119,11 +120,14 @@ void Controller::control() {
   //          this->controlState.kalmanHough.K);
 
   // Compare two kalmans
-  int angle, speed;
+  int angle, angleHoughFar, speed;
   // float cposView = (camErr > houghErr) ? cposViewHough : cposViewCam;
   // float cpos = (camErr > houghErr) ? cposHough : cposCam;
   // angle = (int)((cpos - cposView) / ANGLE_DIV + .5f);  // Round half up
   angle = (int)((cposCam - cposViewCam) / ANGLE_DIV + .5f);
+  angleHoughFar = cposViewHough - cposHoughFar;
+  if (angleHoughFar > HOUGH_ANGLE_PX_DIFF) angle += 5;
+  if (angleHoughFar < -HOUGH_ANGLE_PX_DIFF) angle -= 5;
   angle = this->correctAngle(angle);
   // speed = (int)(MAX_SPEED - (std::abs(angle) / 2.f) + .5f);
   // speed = (std::abs(angle - ANGLE_CENTER) < 10) ? 10 : 5;
