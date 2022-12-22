@@ -59,8 +59,8 @@ struct SensorCamState {
         lposSMA(0),
         rposSMA(WIDTH - 1) {}
 
-  void reduce(const sensor_cam_hough::cam_msg::ConstPtr& msg);
-  void update(const sensor_cam_hough::cam_msg::ConstPtr& msg);
+  void reduce(const sensor_cam::cam_msg::ConstPtr& msg);
+  void update(const sensor_cam::cam_msg::ConstPtr& msg);
   void filter();
 };
 
@@ -165,6 +165,8 @@ void SensorCamHoughState::filter() {
 struct SensorState {
   SensorCamState cam;
   SensorCamHoughState hough;
+
+  SensorState() {}
 };
 
 #endif

@@ -21,6 +21,7 @@
 // Const
 const std::string NODE_NAME = "controller";
 const std::string SUB_TOPIC_CAM = "cam_data";
+const std::string SUB_TOPIC_CAM_HOUGH = "cam_hough_data";
 // const std::string SUB_TOPIC_LIDAR = "lidar_data";
 // const std::string SUB_TOPIC_SONIC = "SONIC_data";
 // const std::string SUB_TOPIC_IMU = "imu_data";
@@ -33,6 +34,7 @@ constexpr float ANGLE_DIV = 2.f;
 class Controller {
   ros::NodeHandle node;
   ros::Subscriber sub_cam;
+  ros::Subscriber sub_cam_hough;
   // ros::Subscriber sub_lidar;
   // ros::Subscriber sub_sonic;
   // ros::Subscriber sub_imu;
@@ -51,6 +53,8 @@ public:
   Controller() {
     this->sub_cam =
         this->node.subscribe(SUB_TOPIC_CAM, 1, &Controller::callbackCam, this);
+    this->sub_cam_hough = this->node.subscribe(
+        SUB_TOPIC_CAM_HOUGH, 1, &Controller::callbackCamHough, this);
     // this->sub_lidar = node.subscribe(SUB_TOPIC_LIDAR, 1,
     // &Controller::callbackLidar, this);
     this->pub = this->node.advertise<xycar_msgs::xycar_motor>(PUB_TOPIC, 1);
