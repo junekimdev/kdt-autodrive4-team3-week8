@@ -6,7 +6,7 @@
 // Include ROS
 #include "ros/console.h"
 #include "ros/ros.h"
-#include "sensor_cam/cam_msg.h"
+#include "sensor_cam_hough/cam_msg.h"
 #include "sensor_msgs/Image.h"
 
 // Include OpenCV
@@ -70,7 +70,7 @@ public:
         lposFar(0),
         rposFar(WIDTH - 1) {
     sub = node.subscribe(SUB_TOPIC, 1, &Sensor::callback, this);
-    pub = node.advertise<sensor_cam::cam_msg>(PUB_TOPIC, 1);
+    pub = node.advertise<sensor_cam_hough::cam_msg>(PUB_TOPIC, 1);
     cv::namedWindow(WINDOW_TITLE);
   }
 
@@ -114,7 +114,7 @@ std::vector<std::vector<cv::Vec4i>> Sensor::divideLines(
     if (x0 == x1) continue;
 
     double slope = ((double)y1 - y0) / ((double)x1 - x0);
-    if (std::abs(slope) > SLOPE_LOW && std::abs(slope) < SLOPE_HIGH) {
+    if (std::abs(slope) > LINE_SLOPE_LOW && std::abs(slope) < LINE_SLOPE_HIGH) {
       if (slope > 0 && x1 > WIDTH / 2 + CENTER_GAP) right.emplace_back(iLine);
       if (slope < 0 && x0 < WIDTH / 2 - CENTER_GAP) left.emplace_back(iLine);
     }
@@ -124,9 +124,9 @@ std::vector<std::vector<cv::Vec4i>> Sensor::divideLines(
 
 std::vector<cv::Point> Sensor::getPoints(double m, double b,
                                          bool isRight) const {
-  int x0 = 0, x1 = 0, xp = 0, yp = ROI_CENTER_Y;
+  int x0 = 0, x1 = 0, xp = 0, yp = ROI_Y + (ROI_HEIGHT >> 1);
   if (m) {
-    b += ROI_TOP;
+    b += ROI_Y;
     x0 = (HEIGHT - b) / m;
     x1 = (HEIGHT / 2 - b) / m;
     xp = (yp - b) / m;
@@ -190,7 +190,7 @@ void Sensor::process() {
 }
 
 void Sensor::publish() {
-  sensor_cam::cam_msg msg;
+  sensor_cam_hough::cam_msg msg;
   msg.header.stamp = ros::Time::now();
   msg.header.frame_id = PUB_TOPIC;
 
