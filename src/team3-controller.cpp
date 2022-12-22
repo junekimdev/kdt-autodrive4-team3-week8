@@ -102,38 +102,34 @@ void Controller::callbackCamHough(
 
 // TODO:
 void Controller::control() {
-#if 0
-  // Decide angle
-  float viewCenter = this->sensorState.cam.width / 2.f;
-  float laneCenter =
-      (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
-  // ROS_INFO("laneCenter: %.3f", laneCenter);
-  int angle =
-      (int)((laneCenter - viewCenter) / ANGLE_DIV + .5f);  // Round half up
-  angle = this->correctAngle(angle);
-  DRIVE_MODE mode =
-      (std::abs(angle) < 5) ? DRIVE_MODE::GO_SLOW : DRIVE_MODE::TURN_SLOW;
-  int speed =
-      mode == DRIVE_MODE::GO_SLOW || mode == DRIVE_MODE::TURN_SLOW ? 5 : 30;
+  // Cam
+  float cposViewCam = this->sensorState.cam.width / 2.f;
+  float cposViewHough = this->sensorState.hough.width / 2.f;
+  float cposCam =
+      (this->sensorState.cam.lpos + this->sensorState.cam.rpos) / 2.f;
+  float cposHough =
+      (this->sensorState.hough.lpos + this->sensorState.hough.rpos) / 2.f;
+  // float cposCam =
+  //     (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
+  // HoughTF
+  // float cposHough =
+  //     (this->sensorState.hough.lposSMA + this->sensorState.hough.rposSMA)
+  //     / 2.f;
+  this->controlState.kalmanCam.estimate(cposCam);
+  this->controlState.kalmanHough.estimate(cposHough);
+  float camErr = this->controlState.kalmanCam.PhatSqrt;
+  float houghErr = this->controlState.kalmanHough.PhatSqrt;
 
-#else
-  // Decide angle
-  float viewCenter = this->sensorState.hough.width / 2.f;
-  float laneCenter =
-      (this->sensorState.hough.lposSMA + this->sensorState.hough.rposSMA) / 2.f;
-  // ROS_INFO("laneCenter: %.3f", laneCenter);
-  int angle =
-      (int)((laneCenter - viewCenter) / ANGLE_DIV + .5f);  // Round half up
+  // Compare two kalmans
+  int angle, speed;
+  float cposView = (camErr > houghErr) ? cposViewHough : cposViewCam;
+  float cpos = (camErr > houghErr) ? cposHough : cposCam;
+  angle = (int)((cpos - cposView) / ANGLE_DIV + .5f);  // Round half up
   angle = this->correctAngle(angle);
-  DRIVE_MODE mode =
-      (std::abs(angle) < 5) ? DRIVE_MODE::GO_SLOW : DRIVE_MODE::TURN_SLOW;
-  int speed =
-      mode == DRIVE_MODE::GO_SLOW || mode == DRIVE_MODE::TURN_SLOW ? 5 : 30;
-
-#endif
+  speed = (int)(MAX_SPEED - (std::abs(angle) / 2.f) + .5f);
+  DRIVE_MODE mode = DRIVE_MODE::GO;
 
   if (this->controlState.isStarted) {
-    // ROS_INFO("Angle: %d | Speed: %d", angle, speed);
     this->controlState.reduce(mode, angle, speed);
     this->pub.publish(this->createMsg());
   }

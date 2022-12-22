@@ -1,6 +1,7 @@
 #ifndef CONTROL_STATE_H
 #define CONTROL_STATE_H
 
+#include <cmath>
 #include <numeric>
 #include <vector>
 
@@ -20,16 +21,58 @@ constexpr int MAX_SPEED = 30;
 constexpr int WIDTH = 640;
 constexpr int SMA_NUM = 10;
 
-enum struct DRIVE_MODE { STOP, GO_SLOW, GO_FAST, TURN_SLOW };
+enum struct DRIVE_MODE { STOP, GO };
+
+struct Kalman1D {
+  float Q;
+  float R;
+  float P;
+  float S;
+  float K;
+  float Xest;
+  float Xmeasured;
+  float Phat;
+  float PhatSqrt;
+
+  Kalman1D(float Q, float R, float Xest, float Phat)
+      : Q(Q),
+        R(R),
+        P(.0f),
+        S(.0f),
+        K(.0f),
+        Xest(Xest),
+        Xmeasured(.0f),
+        Phat(Phat),
+        PhatSqrt(std::sqrt(Phat)) {}
+
+  void estimate(int Xmeasured) {
+    // Get Kalman gain
+    this->P = this->Phat + this->Q;
+    this->S = this->P + this->R;
+    this->K = this->P / this->S;
+
+    // Estimate X
+    this->Xmeasured = Xmeasured;
+    this->Xest = this->Xest + this->K * (this->Xmeasured * this->Xest);
+
+    // Update error
+    this->Phat = (1 - this->K) * this->P;
+    this->PhatSqrt = std::sqrt(this->Phat);
+  }
+};
 
 struct ControlState {
   DRIVE_MODE mode;
+  Kalman1D kalmanCam;
+  Kalman1D kalmanHough;
   int angle;
   int speed;
   bool isStarted;
 
   ControlState()
       : mode(DRIVE_MODE::STOP),
+        kalmanCam(.5, .1, 1, 100),
+        kalmanHough(.5, .1, 1, 100),
         angle(ANGLE_CENTER),
         speed(0),
         isStarted(false) {}
