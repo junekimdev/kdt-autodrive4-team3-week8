@@ -156,14 +156,14 @@ void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
 
 void Sensor::process() {
   // Convert to Gray
-  cv::Mat grayFrame;
+  cv::Mat grayFrame, blurred, edged;
   cv::cvtColor(this->vFrame, grayFrame, cv::COLOR_BGR2GRAY);
-  cv::GaussianBlur(grayFrame, grayFrame, cv::Size(), GAUSIAN_BLUR_SIGMA);
-  cv::Canny(grayFrame, grayFrame, CANNY_LOW_THRESHOLD, CANNY_HIGH_THRESHOLD,
+  cv::GaussianBlur(grayFrame, blurred, cv::Size(), GAUSIAN_BLUR_SIGMA);
+  cv::Canny(blurred, edged, CANNY_LOW_THRESHOLD, CANNY_HIGH_THRESHOLD,
             CANNY_KERNEL_SIZE);
 
   // Hough TF
-  cv::Mat roi = grayFrame(ROI_RECT);
+  cv::Mat roi = edged(ROI_RECT);
   std::vector<cv::Vec4i> lines;
   cv::HoughLinesP(roi, lines, HOUGH_RHO, HOUGH_THETA, HOUGH_THRESHOLD,
                   HOUGH_MIN_LINE_LEN, HOUGH_MAX_LINE_GAP);
