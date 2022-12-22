@@ -87,26 +87,24 @@ inline std::vector<cv::Point> findEdges(const cv::Mat& img) {
 
 inline cv::Rect getRoiRectL(int lx, int w, int rightCut = WIDTH) {
   // Prep args
-  if (w < 1) w = 1;
   if (lx < 0) lx = 0;
   if (rightCut < 1) rightCut = 1;
   if (lx == rightCut) lx--;
 
-  int right = lx + w;
-  if (right > rightCut) right = rightCut;
-  return cv::Rect(cv::Point(lx, ROI_Y), cv::(right, ROI_Y + ROI_HEIGHT));
+  int rx = lx + w;
+  if (rx > rightCut) rx = rightCut;
+  return cv::Rect(cv::Point(lx, ROI_Y), cv::Point(rx, ROI_Y + ROI_HEIGHT));
 }
 
 inline cv::Rect getRoiRectR(int rx, int w, int leftCut = 0) {
   // Prep args
-  if (w < 1) w = 1;
   if (rx > WIDTH) rx = WIDTH;
   if (leftCut > WIDTH - 1) leftCut = WIDTH - 1;
   if (rx == leftCut) rx++;
 
-  int left = rx - w;
-  if (left < leftCut) left = leftCut;
-  return cv::Rect(cv::Point(left, ROI_Y), cv::(rx, ROI_Y + ROI_HEIGHT));
+  int lx = rx - w;
+  if (lx < leftCut) lx = leftCut;
+  return cv::Rect(cv::Point(lx, ROI_Y), cv::Point(rx, ROI_Y + ROI_HEIGHT));
 }
 
 class Sensor {
@@ -184,8 +182,9 @@ void Sensor::process() {
 
     int lx = left - (ROI_SIZE_NORM.width >> 1);
     int rx = right + (ROI_SIZE_NORM.width >> 1);
-    this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width);
-    this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width);
+    int mid = (int)((left + right) / 2.f + .5f);
+    this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width, mid);
+    this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width, mid);
 
   } else if (goodL) {
     // Right line lost
@@ -193,7 +192,8 @@ void Sensor::process() {
 
     int lx = left - (ROI_SIZE_NORM.width >> 1);
     int rx = right + (ROI_SIZE_WIDE.width >> 1);
-    this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width);
+    this->roiRectL =
+        getRoiRectL(lx, ROI_SIZE_NORM.width);  // the order is important
     this->roiRectR =
         getRoiRectR(rx, ROI_SIZE_WIDE.width, this->roiRectL.br().x);
 
@@ -201,9 +201,10 @@ void Sensor::process() {
     // Left line lost
     this->rpos = right;
 
-    int rx = right + (ROI_SIZE_NORM.width >> 1);
     int lx = left - (ROI_SIZE_WIDE.width >> 1);
-    this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width);
+    int rx = right + (ROI_SIZE_NORM.width >> 1);
+    this->roiRectR =
+        getRoiRectR(rx, ROI_SIZE_NORM.width);  // the order is important
     this->roiRectL =
         getRoiRectL(lx, ROI_SIZE_WIDE.width, this->roiRectR.tl().x);
 
@@ -223,8 +224,8 @@ void Sensor::process() {
   this->isRightDetected = goodR;
 
   // for debugging
-  cv::rectangle(this->vFrame, this->roiRectL, WHITE, 1);
-  cv::rectangle(this->vFrame, this->roiRectR, WHITE, 1);
+  cv::rectangle(this->vFrame, this->roiRectL, BLACK, 2);
+  cv::rectangle(this->vFrame, this->roiRectR, BLACK, 2);
   // cv::drawMarker(this->vFrame, cv::Point(pxL[0], SCAN_ROW), YELLOW,
   //                cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
   // cv::drawMarker(this->vFrame, cv::Point(pxL[1], SCAN_ROW), BLUE,
@@ -261,7 +262,7 @@ void Sensor::publish() {
   msg.rpos = this->rpos;
 
   this->pub.publish(msg);
-  // ROS_INFO("lpos: %d | rpos: %d", lpos, rpos);
+  ROS_INFO("lpos: %d | rpos: %d", this->lpos, this->rpos);
 }
 
 int main(int argc, char** argv) {
