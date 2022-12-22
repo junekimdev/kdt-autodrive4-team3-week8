@@ -25,9 +25,11 @@ constexpr int ESC_KEY = 27;
 constexpr int WIDTH = 640;
 constexpr int HEIGHT = 480;
 constexpr int SCAN_ROW = 380;
+constexpr int SCAN_ROW2 = 320;
 constexpr double GAUSIAN_BLUR_SIGMA = 2.;
 constexpr int ROI_HEIGHT = 30;
 constexpr int ROI_Y = SCAN_ROW - (ROI_HEIGHT >> 1);
+constexpr int ROI_Y2 = SCAN_ROW2 - (ROI_HEIGHT >> 1);
 constexpr int ROI_GAP = 8;
 
 const cv::Size ROI_SIZE_FULL = cv::Size(WIDTH, ROI_HEIGHT);
@@ -39,6 +41,12 @@ const cv::Rect ROI_R_NULL = cv::Rect(WIDTH - 1, ROI_Y, 1, ROI_HEIGHT);
 const cv::Rect ROI_L_INIT = cv::Rect(cv::Point(0, ROI_Y), ROI_SIZE_WIDE);
 const cv::Rect ROI_R_INIT =
     cv::Rect(cv::Point(WIDTH >> 1, ROI_Y), ROI_SIZE_WIDE);
+const cv::Rect ROI_FULL2 = cv::Rect(0, ROI_Y2, WIDTH, ROI_HEIGHT);
+const cv::Rect ROI_L_NULL2 = cv::Rect(0, ROI_Y2, 1, ROI_HEIGHT);
+const cv::Rect ROI_R_NULL2 = cv::Rect(WIDTH - 1, ROI_Y2, 1, ROI_HEIGHT);
+const cv::Rect ROI_L_INIT2 = cv::Rect(cv::Point(0, ROI_Y2), ROI_SIZE_WIDE);
+const cv::Rect ROI_R_INIT2 =
+    cv::Rect(cv::Point(WIDTH >> 1, ROI_Y2), ROI_SIZE_WIDE);
 
 inline std::vector<int> filterX(const std::vector<cv::Point>& pts,
                                 const int topLeftX, const int resetV) {
@@ -85,7 +93,7 @@ inline std::vector<cv::Point> findEdges(const cv::Mat& img) {
   return {leftsidePt, rightsidePt};
 }
 
-inline cv::Rect getRoiRectL(int lx, int w, int rightCut = WIDTH) {
+inline cv::Rect getRoiRectL(int lx, int w, int scanRow, int rightCut = WIDTH) {
   // Prep args
   if (lx < 0) lx = 0;
   if (rightCut < 1) rightCut = 1;
@@ -93,10 +101,10 @@ inline cv::Rect getRoiRectL(int lx, int w, int rightCut = WIDTH) {
 
   int rx = lx + w;
   if (rx > rightCut) rx = rightCut;
-  return cv::Rect(cv::Point(lx, ROI_Y), cv::Point(rx, ROI_Y + ROI_HEIGHT));
+  return cv::Rect(cv::Point(lx, scanRow), cv::Point(rx, scanRow + ROI_HEIGHT));
 }
 
-inline cv::Rect getRoiRectR(int rx, int w, int leftCut = 0) {
+inline cv::Rect getRoiRectR(int rx, int w, int scanRow, int leftCut = 0) {
   // Prep args
   if (rx > WIDTH) rx = WIDTH;
   if (leftCut > WIDTH - 1) leftCut = WIDTH - 1;
@@ -104,7 +112,7 @@ inline cv::Rect getRoiRectR(int rx, int w, int leftCut = 0) {
 
   int lx = rx - w;
   if (lx < leftCut) lx = leftCut;
-  return cv::Rect(cv::Point(lx, ROI_Y), cv::Point(rx, ROI_Y + ROI_HEIGHT));
+  return cv::Rect(cv::Point(lx, scanRow), cv::Point(rx, scanRow + ROI_HEIGHT));
 }
 
 class Sensor {
@@ -118,6 +126,12 @@ class Sensor {
   bool isRightDetected;
   int lpos;
   int rpos;
+  cv::Rect roiRectL2;
+  cv::Rect roiRectR2;
+  bool isLeftDetected2;
+  bool isRightDetected2;
+  int lpos2;
+  int rpos2;
 
 public:
   Sensor()
@@ -126,7 +140,13 @@ public:
         isLeftDetected(false),
         isRightDetected(false),
         lpos(0),
-        rpos(WIDTH - 1) {
+        rpos(WIDTH - 1),
+        roiRectL2(ROI_L_INIT2),
+        roiRectR2(ROI_R_INIT2),
+        isLeftDetected2(false),
+        isRightDetected2(false),
+        lpos2(0),
+        rpos2(WIDTH - 1) {
     sub = node.subscribe(SUB_TOPIC, 1, &Sensor::callback, this);
     pub = node.advertise<sensor_cam::cam_msg>(PUB_TOPIC, 1);
     cv::namedWindow(WINDOW_TITLE);
@@ -135,6 +155,7 @@ public:
   void callback(const sensor_msgs::ImageConstPtr& msg);
   void process();
   void publish();
+  void publish2();
 };
 
 void Sensor::callback(const sensor_msgs::ImageConstPtr& msg) {
@@ -183,8 +204,8 @@ void Sensor::process() {
     int lx = left - (ROI_SIZE_NORM.width >> 1);
     int rx = right + (ROI_SIZE_NORM.width >> 1);
     int mid = (int)((left + right) / 2.f + .5f);
-    this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width, mid);
-    this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width, mid);
+    this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width, SCAN_ROW, mid);
+    this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width, SCAN_ROW, mid);
 
   } else if (goodL) {
     // Right line lost
@@ -192,10 +213,10 @@ void Sensor::process() {
 
     int lx = left - (ROI_SIZE_NORM.width >> 1);
     int rx = right + (ROI_SIZE_WIDE.width >> 1);
-    this->roiRectL =
-        getRoiRectL(lx, ROI_SIZE_NORM.width);  // the order is important
+    this->roiRectL = getRoiRectL(lx, ROI_SIZE_NORM.width,
+                                 SCAN_ROW);  // the order is important
     this->roiRectR =
-        getRoiRectR(rx, ROI_SIZE_WIDE.width, this->roiRectL.br().x);
+        getRoiRectR(rx, ROI_SIZE_WIDE.width, SCAN_ROW, this->roiRectL.br().x);
 
   } else if (goodR) {
     // Left line lost
@@ -203,10 +224,10 @@ void Sensor::process() {
 
     int lx = left - (ROI_SIZE_WIDE.width >> 1);
     int rx = right + (ROI_SIZE_NORM.width >> 1);
-    this->roiRectR =
-        getRoiRectR(rx, ROI_SIZE_NORM.width);  // the order is important
+    this->roiRectR = getRoiRectR(rx, ROI_SIZE_NORM.width,
+                                 SCAN_ROW);  // the order is important
     this->roiRectL =
-        getRoiRectL(lx, ROI_SIZE_WIDE.width, this->roiRectR.tl().x);
+        getRoiRectL(lx, ROI_SIZE_WIDE.width, SCAN_ROW, this->roiRectR.tl().x);
 
   } else {
     // All lost
@@ -222,6 +243,72 @@ void Sensor::process() {
   }
   this->isLeftDetected = goodL;
   this->isRightDetected = goodR;
+
+  this->publish();
+
+  // 22222222222
+
+  cv::Mat roiL2 = grayFrame(this->roiRectL2);
+  cv::Mat roiR2 = grayFrame(this->roiRectR2);
+  std::vector<cv::Point> ptsL2 = findEdges(roiL2);
+  std::vector<cv::Point> ptsR2 = findEdges(roiR2);
+  std::vector<int> pxL2 = filterX(ptsL2, this->roiRectL2.x, 0);
+  std::vector<int> pxR2 = filterX(ptsR2, this->roiRectR2.x, WIDTH - 1);
+
+  int left2 = cvRound((pxL2[0] + pxL2[1]) / 2.f);
+  int right2 = cvRound((pxR2[0] + pxR2[1]) / 2.f);
+
+  // Update roi for next
+  // When undetected, lpos & rpos will be kept as previous values
+  bool goodL2 = pxL2[0] != pxL2[1];
+  bool goodR2 = pxR2[0] != pxR2[1];
+  if (goodL2 && goodR2) {
+    // None lost
+    this->lpos2 = left2;
+    this->rpos2 = right2;
+
+    int lx2 = left2 - (ROI_SIZE_NORM.width >> 1);
+    int rx2 = right2 + (ROI_SIZE_NORM.width >> 1);
+    int mid2 = (int)((left2 + right2) / 2.f + .5f);
+    this->roiRectL2 = getRoiRectL(lx2, ROI_SIZE_NORM.width, SCAN_ROW2, mid2);
+    this->roiRectR2 = getRoiRectR(rx2, ROI_SIZE_NORM.width, SCAN_ROW2, mid2);
+
+  } else if (goodL2) {
+    // Right line lost
+    this->lpos2 = left2;
+
+    int lx2 = left2 - (ROI_SIZE_NORM.width >> 1);
+    int rx2 = right2 + (ROI_SIZE_WIDE.width >> 1);
+    this->roiRectL2 = getRoiRectL(lx2, ROI_SIZE_NORM.width,
+                                  SCAN_ROW2);  // the order is important
+    this->roiRectR2 = getRoiRectR(rx2, ROI_SIZE_WIDE.width, SCAN_ROW2,
+                                  this->roiRectL2.br().x);
+
+  } else if (goodR2) {
+    // Left line lost
+    this->rpos2 = right2;
+
+    int lx2 = left2 - (ROI_SIZE_WIDE.width >> 1);
+    int rx2 = right2 + (ROI_SIZE_NORM.width >> 1);
+    this->roiRectR2 = getRoiRectR(rx2, ROI_SIZE_NORM.width,
+                                  SCAN_ROW2);  // the order is important
+    this->roiRectL2 = getRoiRectL(lx2, ROI_SIZE_WIDE.width, SCAN_ROW2,
+                                  this->roiRectR2.tl().x);
+
+  } else {
+    // All lost
+    if (this->isLeftDetected2) {
+      // Stand by to find L line
+      this->roiRectL2 = ROI_FULL2;
+      this->roiRectR2 = ROI_R_NULL2;
+    } else if (this->isRightDetected2) {
+      // Stand by to find R line
+      this->roiRectL2 = ROI_L_NULL2;
+      this->roiRectR2 = ROI_FULL2;
+    }
+  }
+  this->isLeftDetected2 = goodL2;
+  this->isRightDetected2 = goodR2;
 
   // for debugging
   cv::rectangle(this->vFrame, this->roiRectL, BLACK, 2);
@@ -244,8 +331,21 @@ void Sensor::process() {
            cv::Point(WIDTH, SCAN_ROW + ROI_GAP), BLUE, 1);
   cv::line(this->vFrame, cv::Point(0, SCAN_ROW - ROI_GAP),
            cv::Point(WIDTH, SCAN_ROW - ROI_GAP), BLUE, 1);
+
+  cv::rectangle(this->vFrame, this->roiRectL2, BLACK, 2);
+  cv::rectangle(this->vFrame, this->roiRectR2, BLACK, 2);
+  cv::drawMarker(this->vFrame, cv::Point(this->lpos2, SCAN_ROW2), YELLOW,
+                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  cv::drawMarker(this->vFrame, cv::Point(this->rpos2, SCAN_ROW2), BLUE,
+                 cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
+  cv::line(this->vFrame, cv::Point(0, SCAN_ROW2), cv::Point(WIDTH, SCAN_ROW2),
+           BLUE, 1);
+  cv::line(this->vFrame, cv::Point(0, SCAN_ROW2 + ROI_GAP),
+           cv::Point(WIDTH, SCAN_ROW2 + ROI_GAP), BLUE, 1);
+  cv::line(this->vFrame, cv::Point(0, SCAN_ROW2 - ROI_GAP),
+           cv::Point(WIDTH, SCAN_ROW2 - ROI_GAP), BLUE, 1);
   cv::imshow(WINDOW_TITLE, this->vFrame);
-  this->publish();
+  this->publish2();
 }
 
 void Sensor::publish() {
@@ -262,7 +362,22 @@ void Sensor::publish() {
   msg.rpos = this->rpos;
 
   this->pub.publish(msg);
-  ROS_INFO("lpos: %d | rpos: %d", this->lpos, this->rpos);
+}
+
+void Sensor::publish2() {
+  sensor_cam::cam_msg msg;
+  msg.header.stamp = ros::Time::now();
+  msg.header.frame_id = PUB_TOPIC;
+
+  msg.width = WIDTH;
+  msg.height = HEIGHT;
+  msg.scanRow = SCAN_ROW2;
+  msg.isLeftDetected = this->isLeftDetected2;
+  msg.isRightDetected = this->isRightDetected2;
+  msg.lpos = this->lpos2;
+  msg.rpos = this->rpos2;
+
+  this->pub.publish(msg);
 }
 
 int main(int argc, char** argv) {
