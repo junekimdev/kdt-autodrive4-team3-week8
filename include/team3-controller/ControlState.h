@@ -170,14 +170,18 @@ void SensorCamHoughState::reduce(
 void SensorCamHoughState::update(
     const sensor_cam_hough::cam_msg::ConstPtr& msg) {
   this->width = msg->width;
-  if (msg->isLeftDetected) {
-    this->lpos = msg->lpos;
-    this->lposFar = msg->lposFar;
-  }
-  if (msg->isRightDetected) {
-    this->rpos = msg->rpos;
-    this->rposFar = msg->rposFar;
-  }
+  // if (msg->isLeftDetected) {
+  //   this->lpos = msg->lpos;
+  //   this->lposFar = msg->lposFar;
+  // }
+  // if (msg->isRightDetected) {
+  //   this->rpos = msg->rpos;
+  //   this->rposFar = msg->rposFar;
+  // }
+  this->lpos = msg->lpos;
+  this->lposFar = msg->lposFar;
+  this->rpos = msg->rpos;
+  this->rposFar = msg->rposFar;
 }
 void SensorCamHoughState::filter() {
   lposMemo.erase(lposMemo.begin());
