@@ -85,6 +85,7 @@ struct ControlState {
 
 struct SensorCamState {
   int width;
+  int scanRow;
   int lpos;
   int rpos;
   std::vector<int> lposMemo;
@@ -94,6 +95,7 @@ struct SensorCamState {
 
   SensorCamState()
       : width(WIDTH),
+        scanRow(0),
         lpos(0),
         rpos(WIDTH - 1),
         lposMemo(std::vector<int>(SMA_NUM, 0)),
@@ -111,6 +113,7 @@ void SensorCamState::reduce(const sensor_cam::cam_msg::ConstPtr& msg) {
   this->filter();
 }
 void SensorCamState::update(const sensor_cam::cam_msg::ConstPtr& msg) {
+  this->scanRow = msg->scanRow;
   this->width = msg->width;
   if (msg->isLeftDetected) this->lpos = msg->lpos;
   if (msg->isRightDetected) this->rpos = msg->rpos;
@@ -210,6 +213,7 @@ void SensorCamHoughState::filter() {
 
 struct SensorState {
   SensorCamState cam;
+  SensorCamState cam2;
   SensorCamHoughState hough;
 
   SensorState() {}

@@ -29,6 +29,8 @@ const std::string PUB_TOPIC = "xycar_motor";
 constexpr int FREQ = 140;  // Hz
 constexpr int MAX_SPEED = 15;
 constexpr float ANGLE_DIV = 2.f;
+constexpr int SCAN_ROW = 380;
+constexpr int SCAN_ROW2 = 320;
 
 // std::chrono::system_clock::time_point t1, t2;
 
@@ -78,7 +80,8 @@ public:
 };
 
 void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
-  this->sensorState.cam.reduce(msg);
+  if (msg->scanRow == SCAN_ROW) this->sensorState.cam.reduce(msg);
+  if (msg->scanRow == SCAN_ROW2) this->sensorState.cam2.reduce(msg);
   // t2 = std::chrono::system_clock::now();
   // std::chrono::nanoseconds dt = t2 - t1;
   // std::cout << "time: " << dt.count() << '\n';
@@ -102,28 +105,17 @@ void Controller::callbackCamHough(
 void Controller::control() {
   // Cam
   float cposViewCam = this->sensorState.cam.width / 2.f;
-  float cposViewHough = this->sensorState.hough.width / 2.f;
   // float cposCam =
   //     (this->sensorState.cam.lpos + this->sensorState.cam.rpos) / 2.f;
-  // float cposHough =
-  //     (this->sensorState.hough.lpos + this->sensorState.hough.rpos) / 2.f;
   float cposCam =
       (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
-  float cposHough =
-      (this->sensorState.hough.lposSMA + this->sensorState.hough.rposSMA) / 2.f;
-  // this->controlState.kalmanCam.estimate(cposCam);
-  // this->controlState.kalmanHough.estimate(cposHough);
-  // float camErr = this->controlState.kalmanCam.PhatSqrt;
-  // float houghErr = this->controlState.kalmanHough.PhatSqrt;
-  // ROS_INFO("camK: %.3f | houghK: %.3f", this->controlState.kalmanCam.K,
-  //          this->controlState.kalmanHough.K);
+  // float cposCam2 =
+  //     (this->sensorState.cam2.lpos + this->sensorState.cam2.rpos) / 2.f;
+  float cposCam2 =
+      (this->sensorState.cam2.lposSMA + this->sensorState.cam2.rposSMA) / 2.f;
 
-  // Compare two kalmans
   int angle, speed;
-  // float cposView = (camErr > houghErr) ? cposViewHough : cposViewCam;
-  // float cpos = (camErr > houghErr) ? cposHough : cposCam;
-  // angle = (int)((cpos - cposView) / ANGLE_DIV + .5f);  // Round half up
-  angle = (int)((cposCam - cposViewCam) / ANGLE_DIV + .5f);
+  angle = (int)(((cposCam + cposCam2) / 2.f - cposViewCam) / ANGLE_DIV + .5f);
   angle = this->correctAngle(angle);
   // speed = (int)(MAX_SPEED - (std::abs(angle) / 2.f) + .5f);
   // speed = (std::abs(angle - ANGLE_CENTER) < 10) ? 10 : 5;
