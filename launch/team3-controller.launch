@@ -3,12 +3,12 @@
 <launch>
   <!-- motor -->
   <include file="$(find xycar_motor)/launch/xycar_motor.launch"/>
+  <include file="$(find usb_cam)/launch/usb_cam-noviewer.launch"/>
 
   <!-- Team3 includes -->
-  <!-- Cam -->
-  <!-- <include file="$(find sensor_cam)/launch/sensor_cam.launch"/> -->
-  <!-- Cam_hough -->
-  <include file="$(find sensor_cam_hough)/launch/sensor_cam_hough.launch"/>
+  <!-- processor -->
+  <node name="sensor_cam" pkg="sensor_cam" type="sensor_cam" output="screen"/>
+  <node name="sensor_cam_hough" pkg="sensor_cam_hough" type="sensor_cam_hough" output="screen"/>
   <!-- Lidar -->
   <!-- <include file="$(find sensor_lidar)/launch/sensor_lidar.launch"/> -->
   <!-- Sonic -->
