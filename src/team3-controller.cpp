@@ -18,7 +18,7 @@ const std::string NODE_NAME = "controller";
 const std::string SUB_TOPIC_CAM = "cam_data";
 const std::string PUB_TOPIC = "xycar_motor";
 constexpr int FREQ = 140;  // Hz
-constexpr int MAX_SPEED = 15;
+constexpr int SPEED = 10;
 constexpr float ANGLE_DIV = 2.f;
 constexpr float HOUGH_ANGLE_PX_DIFF = 20;
 
@@ -74,7 +74,7 @@ void Controller::control() {
   if (!this->sensorState.cam.isLeftDetected) angle -= 5;
   if (!this->sensorState.cam.isRightDetected) angle += 5;
   angle = this->correctAngle(angle);
-  speed = 10;
+  speed = SPEED;
   DRIVE_MODE mode = DRIVE_MODE::GO;
 
   if (this->controlState.isStarted) {
