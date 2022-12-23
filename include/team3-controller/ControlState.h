@@ -19,6 +19,7 @@ constexpr int MAX_ANGLE = 50;
 constexpr int MIN_ANGLE = -50;
 constexpr int WIDTH = 640;
 constexpr int SMA_NUM = 10;
+constexpr int CON_SMA_NUM = 3;
 
 enum struct DRIVE_MODE { STOP, GO };
 
@@ -66,6 +67,8 @@ struct ControlState {
   Kalman1D kalmanHough;
   int angle;
   int speed;
+  std::vector<int> angleMemo;
+  std::vector<int> speedMemo;
   bool isStarted;
 
   ControlState()
@@ -74,6 +77,8 @@ struct ControlState {
         kalmanHough(.5, .1, 1, 100),
         angle(ANGLE_CENTER),
         speed(0),
+        angleMemo(CON_SMA_NUM, ANGLE_CENTER),
+        speedMemo(CON_SMA_NUM, 0),
         isStarted(false) {}
 
   void reduce(DRIVE_MODE mode, int angle, int speed) {
@@ -81,10 +86,22 @@ struct ControlState {
     this->angle = angle;
     this->speed = speed;
   }
+
+  int filter(std::vector<int> memo, int v);
 };
+
+int ControlState::filter(std::vector<int> memo, int v) {
+  memo.erase(memo.begin());
+  memo.emplace_back(v);
+  return (int)(std::accumulate(memo.begin(), memo.end(), 0) /
+                   (float)memo.size() +
+               .5f);
+}
 
 struct SensorCamState {
   int width;
+  bool isLeftDetected;
+  bool isRightDetected;
   int lpos;
   int rpos;
   std::vector<int> lposMemo;
@@ -94,6 +111,8 @@ struct SensorCamState {
 
   SensorCamState()
       : width(WIDTH),
+        isLeftDetected(true),
+        isRightDetected(true),
         lpos(0),
         rpos(WIDTH - 1),
         lposMemo(std::vector<int>(SMA_NUM, 0)),
@@ -112,8 +131,10 @@ void SensorCamState::reduce(const sensor_cam::cam_msg::ConstPtr& msg) {
 }
 void SensorCamState::update(const sensor_cam::cam_msg::ConstPtr& msg) {
   this->width = msg->width;
-  if (msg->isLeftDetected) this->lpos = msg->lpos;
-  if (msg->isRightDetected) this->rpos = msg->rpos;
+  this->isLeftDetected = msg->isLeftDetected;
+  this->isRightDetected = msg->isRightDetected;
+  this->lpos = msg->lpos;
+  this->rpos = msg->rpos;
 }
 void SensorCamState::filter() {
   lposMemo.erase(lposMemo.begin());

@@ -103,15 +103,16 @@ void Controller::callbackCamHough(
 void Controller::control() {
   // Cam
   float cposViewCam = this->sensorState.cam.width / 2.f;
-  float cposViewHough = this->sensorState.hough.width / 2.f;
+  // float cposViewHough = this->sensorState.hough.width / 2.f;
   // float cposCam =
   //     (this->sensorState.cam.lpos + this->sensorState.cam.rpos) / 2.f;
   // float cposHough =
   //     (this->sensorState.hough.lpos + this->sensorState.hough.rpos) / 2.f;
   float cposCam =
       (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
-  float cposHoughFar =
-      (this->sensorState.hough.lposFar + this->sensorState.hough.rposFar) / 2.f;
+  // float cposHoughFar =
+  //     (this->sensorState.hough.lposFar + this->sensorState.hough.rposFar)
+  //     / 2.f;
   // this->controlState.kalmanCam.estimate(cposCam);
   // this->controlState.kalmanHough.estimate(cposHough);
   // float camErr = this->controlState.kalmanCam.PhatSqrt;
@@ -125,17 +126,20 @@ void Controller::control() {
   // float cpos = (camErr > houghErr) ? cposHough : cposCam;
   // angle = (int)((cpos - cposView) / ANGLE_DIV + .5f);  // Round half up
   angle = (int)((cposCam - cposViewCam) / ANGLE_DIV + .5f);
-  angleHoughFar = cposViewHough - cposHoughFar;
-  if (angleHoughFar > HOUGH_ANGLE_PX_DIFF) angle += 5;
-  if (angleHoughFar < -HOUGH_ANGLE_PX_DIFF) angle -= 5;
+  // angleHoughFar = cposViewHough - cposHoughFar;
+  // if (angleHoughFar > HOUGH_ANGLE_PX_DIFF) angle += 5;
+  // if (angleHoughFar < -HOUGH_ANGLE_PX_DIFF) angle -= 5;
+  if (!this->sensorState.cam.isLeftDetected) angle -= 4;
+  if (!this->sensorState.cam.isRightDetected) angle += 4;
   angle = this->correctAngle(angle);
   // speed = (int)(MAX_SPEED - (std::abs(angle) / 2.f) + .5f);
   // speed = (std::abs(angle - ANGLE_CENTER) < 10) ? 10 : 5;
-  speed = 5;
+  speed = 10;
   DRIVE_MODE mode = DRIVE_MODE::GO;
 
   if (this->controlState.isStarted) {
-    this->controlState.reduce(mode, angle, speed);
+    int angleSMA = controlState.filter(controlState.angleMemo, angle);
+    this->controlState.reduce(mode, angleSMA, speed);
     this->pub.publish(this->createMsg());
   }
 }
