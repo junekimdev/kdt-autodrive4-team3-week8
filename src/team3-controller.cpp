@@ -9,7 +9,7 @@
 #include "ros/console.h"
 #include "ros/ros.h"
 #include "sensor_cam/cam_msg.h"
-#include "sensor_cam_hough/cam_msg.h"
+// #include "sensor_cam_hough/cam_msg.h"
 // #include "sensor_lidar/lidar_msg.h"
 // #include "sensor_sonic/sonic_msg.h"
 // #include "sensor_imu/imu_msg.h"
@@ -36,7 +36,7 @@ constexpr float HOUGH_ANGLE_PX_DIFF = 20;
 class Controller {
   ros::NodeHandle node;
   ros::Subscriber sub_cam;
-  ros::Subscriber sub_cam_hough;
+  // ros::Subscriber sub_cam_hough;
   // ros::Subscriber sub_lidar;
   // ros::Subscriber sub_sonic;
   // ros::Subscriber sub_imu;
@@ -55,10 +55,8 @@ public:
   Controller() {
     this->sub_cam =
         this->node.subscribe(SUB_TOPIC_CAM, 1, &Controller::callbackCam, this);
-    this->sub_cam_hough = this->node.subscribe(
-        SUB_TOPIC_CAM_HOUGH, 1, &Controller::callbackCamHough, this);
-    // this->sub_lidar = node.subscribe(SUB_TOPIC_LIDAR, 1,
-    // &Controller::callbackLidar, this);
+    // this->sub_cam_hough = this->node.subscribe(
+    //     SUB_TOPIC_CAM_HOUGH, 1, &Controller::callbackCamHough, this);
     this->pub = this->node.advertise<xycar_msgs::xycar_motor>(PUB_TOPIC, 1);
   }
 
@@ -72,65 +70,30 @@ public:
   }
 
   void callbackCam(const sensor_cam::cam_msg::ConstPtr& msg);
-  void callbackCamHough(const sensor_cam_hough::cam_msg::ConstPtr& msg);
-  // void callbackLidar(const sensor_lidar::lidar_msg::ConstPtr& msg);
+  // void callbackCamHough(const sensor_cam_hough::cam_msg::ConstPtr& msg);
   void control();
   void start();
 };
 
 void Controller::callbackCam(const sensor_cam::cam_msg::ConstPtr& msg) {
   this->sensorState.cam.reduce(msg);
-  // t2 = std::chrono::system_clock::now();
-  // std::chrono::nanoseconds dt = t2 - t1;
-  // std::cout << "time: " << dt.count() << '\n';
-  // std::swap(t1, t2);
 }
 
-void Controller::callbackCamHough(
-    const sensor_cam_hough::cam_msg::ConstPtr& msg) {
-  this->sensorState.hough.reduce(msg);
-  // t2 = std::chrono::system_clock::now();
-  // std::chrono::nanoseconds dt = t2 - t1;
-  // std::cout << "time: " << dt.count() << '\n';
-  // std::swap(t1, t2);
-}
-
-// void Controller::callbackLidar(const sensor_lidar::lidar_msg::ConstPtr& msg)
-// {
-//   ROS_INFO("CON:: %d", msg->size)
+// void Controller::callbackCamHough(
+//     const sensor_cam_hough::cam_msg::ConstPtr& msg) {
+//   this->sensorState.hough.reduce(msg);
 // }
 
 void Controller::control() {
   // Cam
-  float cposViewCam = this->sensorState.cam.width / 2.f;
-  float cposViewHough = this->sensorState.hough.width / 2.f;
-  // float cposCam =
-  //     (this->sensorState.cam.lpos + this->sensorState.cam.rpos) / 2.f;
-  // float cposHough =
-  //     (this->sensorState.hough.lpos + this->sensorState.hough.rpos) / 2.f;
-  float cposCam =
-      (this->sensorState.cam.lposSMA + this->sensorState.cam.rposSMA) / 2.f;
-  float cposHoughFar =
-      (this->sensorState.hough.lposFar + this->sensorState.hough.rposFar) / 2.f;
-  // this->controlState.kalmanCam.estimate(cposCam);
-  // this->controlState.kalmanHough.estimate(cposHough);
-  // float camErr = this->controlState.kalmanCam.PhatSqrt;
-  // float houghErr = this->controlState.kalmanHough.PhatSqrt;
-  // ROS_INFO("camK: %.3f | houghK: %.3f", this->controlState.kalmanCam.K,
-  //          this->controlState.kalmanHough.K);
+  float cView = this->sensorState.cam.width / 2.f;
+  float cLane = (this->sensorState.cam.lpos + this->sensorState.cam.rpos) / 2.f;
 
   // Compare two kalmans
-  int angle, angleHoughFar, speed;
-  // float cposView = (camErr > houghErr) ? cposViewHough : cposViewCam;
-  // float cpos = (camErr > houghErr) ? cposHough : cposCam;
-  // angle = (int)((cpos - cposView) / ANGLE_DIV + .5f);  // Round half up
-  angle = (int)((cposCam - cposViewCam) / ANGLE_DIV + .5f);
-  angleHoughFar = cposViewHough - cposHoughFar;
-  if (angleHoughFar > HOUGH_ANGLE_PX_DIFF) angle += 5;
-  if (angleHoughFar < -HOUGH_ANGLE_PX_DIFF) angle -= 5;
+  int cErr, angle, speed;
+  cErr = cLane - cView;
+  angle = this->controlState.pid.getControlSignal(cErr);
   angle = this->correctAngle(angle);
-  // speed = (int)(MAX_SPEED - (std::abs(angle) / 2.f) + .5f);
-  // speed = (std::abs(angle - ANGLE_CENTER) < 10) ? 10 : 5;
   speed = 5;
   DRIVE_MODE mode = DRIVE_MODE::GO;
 
@@ -148,15 +111,10 @@ int main(int argc, char** argv) {
   Controller controller;
   ROS_INFO("%s is ONLINE", NODE_NAME.c_str());
 
-  // Set repeat freq
-  // ros::Rate rate(FREQ);
-
   controller.start();
-  // t1 = std::chrono::system_clock::now();
   while (ros::ok()) {
     ros::spinOnce();
     controller.control();
-    // rate.sleep();
   }
 
   return 0;

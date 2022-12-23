@@ -22,6 +22,27 @@ constexpr int SMA_NUM = 10;
 
 enum struct DRIVE_MODE { STOP, GO };
 
+struct PID {
+  float kP;
+  float kI;
+  float kD;
+  float pErr;
+  float iErr;
+  float dErr;
+
+  // Initial try = kP:.5, kI: .0005, kD: kP/10
+  PID(float kP, float kI, float kD)
+      : kP(kP), kI(kI), kD(kD), pErr(0.f), iErr(0.f), dErr(0.f) {}
+
+  getControlSignal(float err) {
+    if (this->kD) this->dErr = err - this->pErr;
+    if (this->kI) this->iErr += err;
+    this->pErr = err;
+    return this->kP * this->pErr + this->kI * this->iErr +
+           this->kD * this->dErr;
+  }
+}
+
 struct Kalman1D {
   float Q;
   float R;
@@ -64,6 +85,7 @@ struct ControlState {
   DRIVE_MODE mode;
   Kalman1D kalmanCam;
   Kalman1D kalmanHough;
+  PID pid;
   int angle;
   int speed;
   bool isStarted;
@@ -72,6 +94,7 @@ struct ControlState {
       : mode(DRIVE_MODE::STOP),
         kalmanCam(.5, .1, 1, 100),
         kalmanHough(.5, .1, 1, 100),
+        pid(.45, .0007, .15),
         angle(ANGLE_CENTER),
         speed(0),
         isStarted(false) {}
