@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE launch>
+<launch>
+  <!-- cam -->
+  <include file="$(find usb_cam)/launch/usb_cam-noviewer.launch"/>
+
+  <!-- processor -->
+  <node name="sensor_cam_hough" pkg="sensor_cam_hough" type="sensor_cam_hough" output="screen"/>
+</launch>

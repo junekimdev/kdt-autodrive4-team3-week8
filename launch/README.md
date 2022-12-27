@@ -1,3 +1,0 @@
-# Launch
-
-## ROS Launch files

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE launch>
+<launch>
+  <!-- lidar -->
+  <include file="$(find xycar_lidar)/launch/lidar_noviewer.launch"/>
+
+  <!-- processor -->
+  <node name="sensor_lidar" pkg="sensor_lidar" type="sensor_lidar" output="screen"/>
+</launch>
