@@ -10,7 +10,7 @@ Repo of Week8 competition for Team3 of 4th KDT Autonomous Driving Dev-Course
 ## S/W Architecture
 
 - ROS nodes & topics
-  ![Architecture Image](absolute_departure.svg)
+  ![Architecture Image](absolute_departure_v2.svg)
 
 ## User Guides
 
