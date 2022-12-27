@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="2">
+  <version>0.0.0</version>
+  <name>team3-controller</name>
+  <description>team3-controller</description>
+  <maintainer email="team3@todo.todo">team3</maintainer>
+  <license>UNLICENSED</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- dependencies -->
+  <build_depend>roscpp</build_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <exec_depend>roscpp</exec_depend>
+
+  <build_depend>std_msgs</build_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <build_depend>xycar_motor</build_depend>
+  <build_export_depend>xycar_motor</build_export_depend>
+  <exec_depend>xycar_motor</exec_depend>
+
+  <build_depend>sensor_cam</build_depend>
+  <build_export_depend>sensor_cam</build_export_depend>
+  <exec_depend>sensor_cam</exec_depend>
+
+  <build_depend>sensor_cam_hough</build_depend>
+  <build_export_depend>sensor_cam_hough</build_export_depend>
+  <exec_depend>sensor_cam_hough</exec_depend>
+
+  <export></export>
+</package>
